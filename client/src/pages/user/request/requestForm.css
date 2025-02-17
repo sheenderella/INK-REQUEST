@@ -1,0 +1,100 @@
+/* requestForm.css */
+.form-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: white;
+    color: black;
+    padding: 2rem;
+  }
+  
+  .form-card {
+    background-color: white;
+    color: black;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 1000px;
+    width: 80%;
+    border-radius: 20px;
+  }
+  
+  .back-icon {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .form-title {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .form-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .form-message {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .success {
+    color: green;
+  }
+  
+  .error {
+    color: red;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .form-col {
+    flex: 1;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-input {
+    width: 100%;
+    border: 1px solid black;
+    padding: 0.5rem;
+    border-radius: 10px;
+  }
+  
+  .form-check {
+    margin-right: 1rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .form-check-input {
+    margin-right: 0.5rem;
+  }
+  
+  .form-check-input:checked {
+    background-color: black !important;
+    border-color: black !important;
+  }
+ 
+
+  
+  .form-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 1rem;
+  }
+  

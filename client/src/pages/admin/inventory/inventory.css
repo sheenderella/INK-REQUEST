@@ -1,0 +1,172 @@
+/* Wrapper and Card */
+.form-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: white;
+    color: black;
+    padding: 2rem;
+  }
+  
+  .form-card {
+    background-color: white;
+    color: black;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 1000px;
+    width: 80%;
+    border-radius: 20px;
+    position: relative;
+  }
+  
+  /* Icons */
+  .back-icon {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: black;
+  }
+  
+  .add-icon {
+    font-size: 2rem;
+    color: black;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  
+  .add-icon:hover {
+    color: black;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: black;
+  }
+  
+  .close-btn:hover {
+    color: black;
+  }
+  
+  /* Titles and Messages */
+  .form-title {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .form-subtitle {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .form-message {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: black;
+  }
+  
+  .success,
+  .error {
+    color: black;
+  }
+  
+  /* Form Inputs */
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .form-col {
+    flex: 1;
+  }
+  
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-input {
+    width: 100%;
+    border: 1px solid black;
+    padding: 0.5rem;
+    border-radius: 10px;
+  }
+  
+  .form-button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-top: 1rem;
+  }
+  
+  /* Popup Form */
+  .form-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .form-popup-content {
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    position: relative;
+  }
+  
+  /* Inventory Table */
+  .table {
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .table-dark th {
+    background-color: black;
+    color: white;
+  }
+  
+  .table th,
+  .table td {
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .even {
+    background-color: #f2f2f2;
+  }
+  
+  .odd {
+    background-color: #ffffff;
+  }
+  
+  .btn-danger {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .btn-danger:hover {
+    background-color: black;
+  }
+  
