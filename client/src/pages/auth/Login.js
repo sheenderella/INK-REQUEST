@@ -13,12 +13,24 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      if (response.data.role === 'admin') navigate('/admin');
-      else navigate('/user');
+      // Send a POST request with the email and password
+      const response = await axios.post('http://localhost:8000/api/login', { email, password });
+      
+      // Check if a token is returned
+      if (response.data.token) {
+        // Store the token in localStorage
+        localStorage.setItem('token', response.data.token);
+
+        // Check user role to redirect
+        if (response.data.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard-user');
+        }
+      }
     } catch (error) {
-      alert('Invalid Credentials');
+      // Handle error if credentials are invalid or something goes wrong
+      alert(error.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
@@ -29,7 +41,14 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Email</label>
-            <input type="email" className="form-control border-black" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input
+              type="email"
+              className="form-control border-black"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="mb-3">
             <label className="form-label">Password</label>
@@ -53,7 +72,11 @@ const Login = () => {
           </div>
           <button type="submit" className="btn btn-dark w-100 mb-2">LOGIN</button>
           <div className="text-center mt-2">
-            <span className="text-muted" style={{ cursor: 'pointer' }} onClick={() => navigate('/register')}>
+            <span
+              className="text-muted"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/register')}
+            >
               Don't have an account? <strong>Register</strong>
             </span>
           </div>

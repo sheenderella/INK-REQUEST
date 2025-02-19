@@ -1,0 +1,73 @@
+/* dashboardUser.css */
+.dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 2rem;
+    color: #343a40;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .dashboard-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: left;
+  }
+  
+  .logout-button {
+    background-color: #f8f9fa;
+    color: red;
+    border: none;
+    cursor: pointer;
+
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  
+  .dashboard-buttons {
+    display: flex;
+    gap: 1rem; /* Add spacing between buttons */
+    width: 100%;
+    justify-content: left; /* Center the buttons horizontally */
+    margin-top: 2rem;
+  }
+  
+  .dashboard-button {
+    width: 120px; /* Width and height are equal to make the button square */
+    height: 120px;
+    background-color: black;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px; /* Round corners */
+    font-size: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Center the content inside the button */
+    text-align: center;
+  }
+  
+  .dashboard-button:hover {
+    background-color: #333;
+  }
+  
+  .dashboard-button .button-text {
+    margin-top: 0.5rem;
+  }
+  
+  .dashboard-button svg {
+    margin-bottom: 0.5rem;
+  }
+  

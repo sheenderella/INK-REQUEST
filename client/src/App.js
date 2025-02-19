@@ -5,10 +5,17 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Update from "./pages/admin/updateuser/Update";
 import AddUser from "./pages/admin/adduser/AddUser";
 import User from "./pages/admin/getuser/User";
+
 import Login from "./pages/auth/Login";
-import ErrorPage from "./pages/ErrorPage";
-import RequestForm from './pages/user/request/requestForm';
 import Register from './pages/auth/Register';
+
+import ErrorPage from "./pages/ErrorPage";
+
+import RequestForm from './pages/user/request/requestForm';
+import DashboardUser from './pages/user/dashboard/dashboardUser';
+import TrackRequest from './pages/user/track/trackRequest';
+
+
 import Inventory from './pages/admin/inventory/inventory';
 
 function App() {
@@ -22,6 +29,8 @@ function App() {
 
     { path: "/inventory", element: <Inventory /> },    
     { path: '/request', element: <RequestForm /> },
+    { path: '/dashboard-user', element: <DashboardUser /> },
+    { path: '/track-request', element: <TrackRequest /> },
 
     { path: "*", element: <ErrorPage /> } 
   ]);
