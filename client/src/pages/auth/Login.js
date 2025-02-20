@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState(''); // Changed from email to username
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -13,8 +13,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send a POST request with the email and password
-      const response = await axios.post('http://localhost:8000/api/login', { email, password });
+      // Send a POST request with the username and password
+      const response = await axios.post('http://localhost:8000/api/login', { username, password });
       
       // Check if a token is returned
       if (response.data.token) {
@@ -40,13 +40,13 @@ const Login = () => {
         <h2 className="text-center mb-4">Login</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label">Email</label>
+            <label className="form-label">Username</label> {/* Changed label from Email to Username */}
             <input
-              type="email"
+              type="text"
               className="form-control border-black"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>

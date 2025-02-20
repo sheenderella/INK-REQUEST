@@ -4,12 +4,12 @@ import User from '../model/users.js'; // Import the User model
 
 // Login controller function
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body; // Use username instead of email
 
   try {
-    // Check if the user exists
-    const user = await User.findOne({ email });
-    
+    // Check if the user exists by username
+    const user = await User.findOne({ username });
+
     // If user does not exist, send an error message
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -23,9 +23,9 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Create a JWT token with the user data (you can also add other info like role or permissions)
+    // Create a JWT token with the user data
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, username: user.username }, // Store username instead of email
       process.env.JWT_SECRET, // Make sure to add JWT_SECRET to your .env file
       { expiresIn: '1h' } // Token expiration time (1 hour in this case)
     );

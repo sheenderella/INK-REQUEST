@@ -5,9 +5,12 @@ export const createUser = async (req, res) => {
   try {
     const { first_name, last_name, department, email, password, role } = req.body;
 
-    const userCount = await User.countDocuments({ first_name, last_name });
+    // Ensure last_name has no spaces and is lowercase
+    const trimmedLastName = last_name.trim().replace(/\s+/g, '').toLowerCase();
 
-    const username = `${first_name.toLowerCase()}${last_name.toLowerCase()}${userCount + 1}`;
+    const userCount = await User.countDocuments({ last_name });
+
+    const username = `${trimmedLastName}${userCount + 1}`;
 
     console.log("Generated Username:", username); 
 
@@ -25,6 +28,8 @@ export const createUser = async (req, res) => {
 
     // Save the user to the database
     const savedUser = await newUser.save();
+
+    res.status(201).json({ message: 'User created successfully', user: savedUser });
 
   } catch (error) {
     console.error("Error creating user:", error);
