@@ -2,43 +2,21 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  first_name: {
-    type: String,
-    required: true,
-  },
-  middle_name: {
-    type: String,
-    required: false,
-  },
-  last_name: {
-    type: String,
-    required: true,
-  },
-  department: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    match: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    enum: ['admin', 'user', 'supervisor'],
-    required: true,
-  },
-}, {
-  timestamps: true,
-});
+  first_name: { type: String, required: true },
+  last_name: { type: String, required: true },
+  username: { type: String, required: true, unique: true }, 
+  department: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['admin', 'user', 'supervisor'], required: true },
+}, { timestamps: true });
 
-
+// Ensure username exists before saving
 userSchema.pre('save', async function (next) {
+  if (!this.username) {
+    return next(new Error('Username is required but missing.'));
+  }
+
   if (this.isModified('password') || this.isNew) {
     try {
       this.password = await bcrypt.hash(this.password, 10);
@@ -52,4 +30,4 @@ userSchema.pre('save', async function (next) {
 });
 
 const User = mongoose.model('User', userSchema);
-export default User; 
+export default User;
