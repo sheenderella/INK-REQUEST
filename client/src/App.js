@@ -1,37 +1,96 @@
 import "./App.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
+// Admin Pages
+import AdminDashboard from "../src/pages/admin/dashboard/AdminDashboard";
+import Inventory from "./pages/admin/inventory/inventory";
+import AccountManagement from "./pages/admin/accounts/AccountManagement";
 
-import Update from "./pages/admin/updateuser/Update";
-import AddUser from "./pages/admin/adduser/AddUser";
-import User from "./pages/admin/getuser/User";
 
-import Login from "./pages/auth/Login";
-import Register from './pages/auth/Register';
+// Login Page
+import Login from "./pages/login/Login";
 
-import ErrorPage from "./pages/ErrorPage";
+// Error Page
+import ErrorPage from "./components/ErrorPage";
 
+// User Pages
 import RequestForm from './pages/user/request/requestForm';
 import DashboardUser from './pages/user/dashboard/dashboardUser';
 import TrackRequest from './pages/user/track/trackRequest';
 
+//Supervisor Pages
 
-import Inventory from './pages/admin/inventory/inventory';
+
+
+// PrivateRoute Component
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   const route = createBrowserRouter([
     { path: "/", element: <Login /> },
-    { path: "/register", element: <Register /> },
     
-    { path: "/user", element: <User /> },
-    { path: "/add", element: <AddUser /> },
-    { path: "/update/:id", element: <Update /> },    
+   
+    // Protected user routes
+    { 
+      path: "/request", 
+      element: (
+        <PrivateRoute>
+          <RequestForm />
+        </PrivateRoute>
+      ) 
+    },
+    { 
+      path: "/dashboard-user", 
+      element: (
+        <PrivateRoute>
+          <DashboardUser />
+        </PrivateRoute>
+      ) 
+    },
+    { 
+      path: "/track-request", 
+      element: (
+        <PrivateRoute>
+          <TrackRequest />
+        </PrivateRoute>
+      ) 
+    },
+   
+    // Protected admin route
+    { 
+      path: "/admin", 
+      element: (
+        <PrivateRoute>
+          <AdminDashboard />
+        </PrivateRoute>
+      )
+    },
 
-    { path: "/inventory", element: <Inventory /> },    
-    { path: '/request', element: <RequestForm /> },
-    { path: '/dashboard-user', element: <DashboardUser /> },
-    { path: '/track-request', element: <TrackRequest /> },
+    { 
+      path: "/inventory", 
+      element: (
+        <PrivateRoute>
+          <Inventory />
+        </PrivateRoute>
+      ) 
+    },
 
+    { 
+      path: "/account-management", 
+      element: (
+        <PrivateRoute>
+          <AccountManagement />
+        </PrivateRoute>
+      )
+    },
+    
+
+
+
+
+
+    
+    // Fallback 
     { path: "*", element: <ErrorPage /> } 
   ]);
 

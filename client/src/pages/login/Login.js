@@ -71,15 +71,7 @@ const Login = () => {
             </div>
           </div>
           <button type="submit" className="btn btn-dark w-100 mb-2">LOGIN</button>
-          <div className="text-center mt-2">
-            <span
-              className="text-muted"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/register')}
-            >
-              Don't have an account? <strong>Register</strong>
-            </span>
-          </div>
+          
         </form>
       </div>
     </div>

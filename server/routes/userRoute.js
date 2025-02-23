@@ -1,16 +1,22 @@
-import express from 'express';
+// routes/userRoute.js
 
-import { verifyToken } from '../middleware/authMiddleware.js'; // Import the verifyToken middleware
-import { createUser } from '../controller/usersController.js'; 
+import express from 'express';
+import { verifyToken } from '../middleware/authMiddleware.js';
+import {
+  createUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser
+} from '../controller/userController.js';
 
 const router = express.Router();
 
-// Define routes related to user
-router.post('/users', createUser);  
 
-
-// Protect the /api/users route with the verifyToken middleware
-router.post('/users', verifyToken, createUser);  // Create user only if authenticated
-
+router.post('/register', verifyToken, createUser);
+router.get('/users', verifyToken, getAllUsers);
+router.get('/users/:id',verifyToken,  getUserById);
+router.put('/users/:id', verifyToken, updateUser);
+router.delete('/users/:id', verifyToken, deleteUser);
 
 export default router;

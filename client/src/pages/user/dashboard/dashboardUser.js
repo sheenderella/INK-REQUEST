@@ -1,3 +1,4 @@
+// pages/user/dashboard/dashboardUser.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -17,9 +18,10 @@ const DashboardUser = () => {
     navigate('/track-request');
   };
 
-  // Logout function (redirect to home or login page)
+  // Logout function: clear token and navigate to login
   const handleLogout = () => {
-    navigate('/'); // Replace with actual logout logic (e.g., clear session/token)
+    localStorage.removeItem('token'); // Clear token on logout
+    navigate('/');
   };
 
   return (

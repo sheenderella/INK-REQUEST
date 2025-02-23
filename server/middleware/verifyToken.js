@@ -1,5 +1,6 @@
-// middlewares/authMiddleware.js
+// middleware/verifyToken.js
 import jwt from 'jsonwebtoken';
+import { isTokenBlacklisted } from './tokenBlacklist.js';
 
 export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,9 +13,14 @@ export const verifyToken = (req, res, next) => {
     return res.status(401).json({ message: 'Invalid token format' });
   }
 
+  // Check if token is blacklisted
+  if (isTokenBlacklisted(token)) {
+    return res.status(401).json({ message: 'Token has been invalidated. Please log in again.' });
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; 
+    req.user = decoded;
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Token is not valid', error: error.message });
