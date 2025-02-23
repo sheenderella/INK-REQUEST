@@ -1,11 +1,12 @@
 import Inventory from '../model/inventory.js';
+import InkModel from '../model/inkModels.js';
 
 /**
  * Get all inventory items.
  */
 export const getAllInventory = async (req, res) => {
   try {
-    const inventoryList = await Inventory.find();
+    const inventoryList = await Inventory.find().populate('ink_model');
     res.status(200).json(inventoryList);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -14,20 +15,21 @@ export const getAllInventory = async (req, res) => {
 
 /**
  * Add a new inventory item.
- * Expected req.body: { ink_name, color, quantity, volume }
+ * Expected req.body: { ink_model_id, color, quantity, volume }
  */
 export const addInventory = async (req, res) => {
   try {
-    const { ink_name, color, quantity, volume } = req.body;
+    const { ink_model_id, color, quantity, volume } = req.body;
 
-    // Check if ink name already exists
-    const existingInk = await Inventory.findOne({ ink_name });
-    if (existingInk) {
-      return res.status(400).json({ message: 'Ink model already exists' });
+    // Validate that the referenced ink model exists
+    const inkModelExists = await InkModel.findById(ink_model_id);
+    if (!inkModelExists) {
+      return res.status(400).json({ message: 'Invalid ink model ID' });
     }
 
+    // Create a new inventory entry (allowing multiple entries for the same ink model)
     const newInventory = new Inventory({
-      ink_name,
+      ink_model: ink_model_id,
       color,
       quantity,
       volume,
@@ -47,23 +49,22 @@ export const addInventory = async (req, res) => {
 export const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { ink_name, color, quantity, volume } = req.body;
+    const { ink_model_id, color, quantity, volume } = req.body;
 
     let updateData = {};
-    if (ink_name) {
-      // Ensure new ink name doesn't conflict with another entry
-      const existingInk = await Inventory.findOne({ ink_name });
-      if (existingInk && existingInk._id.toString() !== id) {
-        return res.status(400).json({ message: 'Ink model name already exists' });
+    if (ink_model_id) {
+      // Validate that the new ink model exists
+      const inkModelExists = await InkModel.findById(ink_model_id);
+      if (!inkModelExists) {
+        return res.status(400).json({ message: 'Invalid ink model ID' });
       }
-      updateData.ink_name = ink_name;
+      updateData.ink_model = ink_model_id;
     }
     if (color) updateData.color = color;
-    if (quantity) updateData.quantity = quantity;
+    if (quantity !== undefined) updateData.quantity = quantity;
     if (volume) updateData.volume = volume;
 
-    const updatedInventory = await Inventory.findByIdAndUpdate(id, updateData, { new: true });
-
+    const updatedInventory = await Inventory.findByIdAndUpdate(id, updateData, { new: true }).populate('ink_model');
     if (!updatedInventory) {
       return res.status(404).json({ message: 'Inventory item not found' });
     }
