@@ -1,8 +1,5 @@
 import InkModel from '../model/inkModels.js';
 
-/**
- * Get all ink models.
- */
 export const getAllInkModels = async (req, res) => {
   try {
     const inkModels = await InkModel.find();
@@ -12,9 +9,6 @@ export const getAllInkModels = async (req, res) => {
   }
 };
 
-/**
- * Get a specific ink model by ID.
- */
 export const getInkModelById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -28,22 +22,23 @@ export const getInkModelById = async (req, res) => {
   }
 };
 
-/**
- * Add a new ink model.
- * Expected req.body: { ink_name }
- */
+
 export const addInkModel = async (req, res) => {
   try {
-    const { ink_name } = req.body;
+    const { ink_name, colors } = req.body;
 
-    // Check if ink model already exists
     const existingInk = await InkModel.findOne({ ink_name });
     if (existingInk) {
       return res.status(400).json({ message: 'Ink model already exists' });
     }
 
+    if (!Array.isArray(colors) || colors.length === 0) {
+      return res.status(400).json({ message: 'Colors must be a non-empty array' });
+    }
+
     const newInkModel = new InkModel({
-      ink_name
+      ink_name,
+      colors
     });
 
     const savedInkModel = await newInkModel.save();
@@ -53,16 +48,22 @@ export const addInkModel = async (req, res) => {
   }
 };
 
-/**
- * Update an existing ink model.
- * Expected req.body: { ink_name }
- */
+
 export const updateInkModel = async (req, res) => {
   try {
     const { id } = req.params;
-    const { ink_name } = req.body;
+    const { ink_name, colors } = req.body;
 
-    const updatedInkModel = await InkModel.findByIdAndUpdate(id, { ink_name }, { new: true });
+    let updateData = {};
+    if (ink_name) updateData.ink_name = ink_name;
+    if (colors) {
+      if (!Array.isArray(colors) || colors.length === 0) {
+        return res.status(400).json({ message: 'Colors must be a non-empty array' });
+      }
+      updateData.colors = colors;
+    }
+
+    const updatedInkModel = await InkModel.findByIdAndUpdate(id, updateData, { new: true });
     if (!updatedInkModel) {
       return res.status(404).json({ message: 'Ink model not found' });
     }
@@ -73,9 +74,7 @@ export const updateInkModel = async (req, res) => {
   }
 };
 
-/**
- * Delete an ink model.
- */
+
 export const deleteInkModel = async (req, res) => {
   try {
     const { id } = req.params;

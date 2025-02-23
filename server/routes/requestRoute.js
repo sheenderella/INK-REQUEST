@@ -1,5 +1,5 @@
 import express from 'express';
-// For production, uncomment the next line and remove the dummy middleware below:
+// For production, uncomment token verification middleware.
 // import { verifyToken } from '../middleware/authMiddleware.js';
 import {
   submitInkRequest,
@@ -11,15 +11,11 @@ import {
 
 const router = express.Router();
 
-// Dummy middleware for testing without tokens.
-// Use a valid dummy ObjectId for testing.
+// Dummy middleware for testing (sets req.user)
 router.use((req, res, next) => {
-  req.user = { id: "000000000000000000000001" };
+  req.user = { id: "000000000000000000000001" }; // Valid dummy ObjectId
   next();
 });
-
-// In production, replace the dummy middleware with the following:
-// router.use(verifyToken);
 
 // Endpoints:
 router.post('/ink/request', submitInkRequest);

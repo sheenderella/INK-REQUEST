@@ -8,7 +8,8 @@ const inkIssuanceSchema = new mongoose.Schema(
     issued_to: { type: String, required: true, maxlength: 100 },
     issued_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     issue_date: { type: Date, default: Date.now },
-    source: { type: String, enum: ['Ink In Use', 'Inventory'], required: true } // New field to track source of ink
+    // Tracks whether the ink was deducted from Ink In Use or directly from Inventory
+    source: { type: String, enum: ['Ink In Use', 'Inventory'], required: true }
   },
   { timestamps: true }
 );

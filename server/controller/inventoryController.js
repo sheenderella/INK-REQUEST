@@ -6,6 +6,7 @@ import InkModel from '../model/inkModels.js';
  */
 export const getAllInventory = async (req, res) => {
   try {
+    // Populate the standardized ink model details
     const inventoryList = await Inventory.find().populate('ink_model');
     res.status(200).json(inventoryList);
   } catch (error) {
@@ -21,13 +22,19 @@ export const addInventory = async (req, res) => {
   try {
     const { ink_model_id, color, quantity, volume } = req.body;
 
-    // Validate that the referenced ink model exists
-    const inkModelExists = await InkModel.findById(ink_model_id);
-    if (!inkModelExists) {
+    // Validate that the referenced InkModel exists
+    const inkModel = await InkModel.findById(ink_model_id);
+    if (!inkModel) {
       return res.status(400).json({ message: 'Invalid ink model ID' });
     }
 
-    // Create a new inventory entry (allowing multiple entries for the same ink model)
+    // Validate that the provided color is one of the allowed colors (case-insensitive)
+    const allowedColors = inkModel.colors.map(c => c.toLowerCase());
+    if (!allowedColors.includes(color.toLowerCase())) {
+      return res.status(400).json({ message: `Invalid color. Allowed colors: ${inkModel.colors.join(', ')}` });
+    }
+
+    // Create a new inventory entry
     const newInventory = new Inventory({
       ink_model: ink_model_id,
       color,
@@ -45,6 +52,7 @@ export const addInventory = async (req, res) => {
 
 /**
  * Update an inventory item.
+ * Expected req.body: { ink_model_id, color, quantity, volume }
  */
 export const updateInventory = async (req, res) => {
   try {
@@ -53,7 +61,7 @@ export const updateInventory = async (req, res) => {
 
     let updateData = {};
     if (ink_model_id) {
-      // Validate that the new ink model exists
+      // Validate the new ink model exists
       const inkModelExists = await InkModel.findById(ink_model_id);
       if (!inkModelExists) {
         return res.status(400).json({ message: 'Invalid ink model ID' });

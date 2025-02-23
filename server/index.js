@@ -10,7 +10,6 @@ import userRoutes from './routes/userRoute.js';
 import authRoutes from './routes/authRoutes.js';
 import requestRoutes from './routes/requestRoute.js';
 import inventoryRoutes from './routes/inventoryRoute.js';
-import inkInUseRoutes from './routes/inkInUseRoutes.js';
 
 import printerRoutes from './routes/printerRoutes.js';
 import inkRoutes from './routes/inkModelRoutes.js';
@@ -27,12 +26,13 @@ app.use(express.json());
 app.use('/api', userRoutes);
 app.use('/api', authRoutes);
 
-app.use('/api', requestRoutes); 
-app.use('/api', inventoryRoutes);
-app.use('/api', inkInUseRoutes); 
-
 app.use('/api', printerRoutes); 
 app.use('/api', inkRoutes); 
+app.use('/api', inventoryRoutes);
+app.use('/api', requestRoutes); 
+
+
+
 
 // Connect to MongoDB
 mongoose

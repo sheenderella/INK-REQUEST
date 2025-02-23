@@ -1,3 +1,4 @@
+// ink_in_use.js
 import mongoose from 'mongoose';
 
 const inkInUseSchema = new mongoose.Schema(
@@ -7,6 +8,8 @@ const inkInUseSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     department: { type: String, required: true, maxlength: 100 },
     quantity_used: { type: Number, required: true },
+    // NEW: Track the color of the ink in use.
+    color: { type: String, required: true, maxlength: 20 },
     status: { type: String, enum: ['In Use', 'Transferred'], default: 'In Use' },
     assigned_date: { type: Date, default: Date.now }
   },

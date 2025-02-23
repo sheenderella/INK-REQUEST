@@ -4,7 +4,10 @@ const inkRequestSchema = new mongoose.Schema(
   {
     ink: { type: mongoose.Schema.Types.ObjectId, ref: 'Inventory', required: true },
     requested_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    quantity_requested: { type: Number, required: true },
+    // Always set to 1 since each request is a single unit (or a set for colored)
+    quantity_requested: { type: Number, required: true, default: 1 },
+    // New field to specify if the request is "black" or "colored"
+    ink_type: { type: String, enum: ['black', 'colored'], default: 'black' },
     supervisor_approval: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
     supervisor_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     supervisor_date: { type: Date },
@@ -13,12 +16,9 @@ const inkRequestSchema = new mongoose.Schema(
     admin_date: { type: Date },
     status: { type: String, enum: ['Pending', 'Approved', 'Rejected', 'Fulfilled'], default: 'Pending' },
     request_date: { type: Date, default: Date.now },
-    consumption_status: { 
-      type: String, 
-      enum: ['Fully Used', 'Partially Used'], 
-      default: 'Fully Used' 
-    }, // New field for tracking partial consumption
-    remaining_quantity: { type: Number, default: 0 }, // Stores remaining ink if partially used
+    // Allow consumption_status to be either a string or an object
+    consumption_status: { type: mongoose.Schema.Types.Mixed, default: 'Not Processed' }
+
   },
   { timestamps: true }
 );
