@@ -1,152 +1,300 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaArrowLeft, FaPlus, FaTimes } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import './inventory.css'; // Custom styling for the inventory page
+import {
+  FaEdit,
+  FaTrash,
+  FaPlus,
+  FaSave,
+  FaTimes
+} from 'react-icons/fa';
+import './inventory.css';
 
-const Inventory = () => {
-  const navigate = useNavigate();
-  const [inks, setInks] = useState([]);
-  const [quantity, setQuantity] = useState('');
-  const [color, setColor] = useState('');
-  const [inkModel, setInkModel] = useState('');
-  const [message, setMessage] = useState('');
-  const [showForm, setShowForm] = useState(false); // Toggle form visibility
+const InventoryManagement = () => {
+  const [inventory, setInventory] = useState([]);
+  const [inkModels, setInkModels] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({ ink_model: '', color: '', quantity: '', volume: '' });
+  const [showPopup, setShowPopup] = useState(false);
+  const [newInventory, setNewInventory] = useState({ ink_model: '', color: '', quantity: '', volume: '' });
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Fetch inventory and ink models from backend on mount
   useEffect(() => {
-    // Fetch ink items from the API
-    axios
-      .get('http://localhost:8000/api/ink')
-      .then((response) => setInks(response.data))
-      .catch((error) => console.error(error));
-  }, [inks]);
+    fetchInventory();
+    fetchInkModels();
+  }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'color') {
-      setColor(value);
-    } else if (name === 'quantity') {
-      setQuantity(value);
-    } else {
-      setInkModel(value);
-    }
+  const fetchInventory = () => {
+    axios.get('http://localhost:8000/api/inventory')
+      .then(res => setInventory(res.data))
+      .catch(err => console.error('Error fetching inventory:', err));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!quantity || !color || !inkModel) {
-      setMessage('All fields are required!');
-      return;
-    }
-
-    const newInk = { quantity, color, inkModel };
-    try {
-      await axios.post('http://localhost:8000/api/ink', newInk);
-      setMessage('Ink added successfully!');
-      setQuantity('');
-      setColor('');
-      setInkModel('');
-      setShowForm(false); // Hide the form after submission
-    } catch (error) {
-      setMessage('Failed to add ink.');
-    }
+  const fetchInkModels = () => {
+    // Use the fixed endpoint for ink models
+    axios.get('http://localhost:8000/api/inks/models')
+      .then(res => {
+        console.log('Fetched ink models:', res.data);
+        setInkModels(res.data);
+      })
+      .catch(err => console.error('Error fetching ink models:', err));
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:8000/api/ink/${id}`);
-      setMessage('Ink deleted successfully!');
-    } catch (error) {
-      setMessage('Failed to delete ink.');
-    }
+  // Generic change handler using functional updates
+  const handleChange = (e, field, setter) => {
+    setter(prev => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleCloseForm = () => {
-    setShowForm(false); // Close the form
+  // When an ink model is selected, update the state with its ID and auto-set its first allowed color
+  const handleInkModelChange = (e, setter) => {
+    const newInkModel = e.target.value;
+    setter(prev => {
+      const selectedModel = inkModels.find(
+        model => model._id.toString() === newInkModel
+      );
+      const newColor =
+        selectedModel && selectedModel.colors && selectedModel.colors.length > 0
+          ? selectedModel.colors[0]
+          : '';
+      return { ...prev, ink_model: newInkModel, color: newColor };
+    });
   };
+
+  const saveEdit = () => {
+    const payload = {
+      ink_model_id: editData.ink_model,
+      color: editData.color,
+      quantity: editData.quantity,
+      volume: editData.volume
+    };
+    axios.put(`http://localhost:8000/api/inventory/${editingId}`, payload)
+      .then(() => {
+         setEditingId(null);
+         fetchInventory();
+      })
+      .catch(err => console.error(err));
+  };
+
+  const deleteInventory = (id) => {
+    axios.delete(`http://localhost:8000/api/inventory/${id}`)
+      .then(() => fetchInventory())
+      .catch(err => console.error(err));
+  };
+
+  const saveNew = () => {
+    const payload = {
+      ink_model_id: newInventory.ink_model,
+      color: newInventory.color,
+      quantity: newInventory.quantity,
+      volume: newInventory.volume
+    };
+    axios.post('http://localhost:8000/api/inventory', payload)
+      .then(() => {
+        setNewInventory({ ink_model: '', color: '', quantity: '', volume: '' });
+        setShowPopup(false);
+        fetchInventory();
+      })
+      .catch(err => console.error(err));
+  };
+
+  // Returns the allowed colors for a given ink model ID
+  const getColorsForInkModel = (inkModelId) => {
+    const model = inkModels.find(im => im._id.toString() === inkModelId);
+    return model ? model.colors : [];
+  };
+
+  // Filter inventory based on search term
+  const filteredInventory = inventory.filter(item => {
+    let inkModelStr = '';
+    if (item.ink_model) {
+      if (typeof item.ink_model === 'string') {
+        inkModelStr = item.ink_model;
+      } else if (typeof item.ink_model === 'object' && item.ink_model.ink_name) {
+        inkModelStr = item.ink_model.ink_name;
+      }
+    }
+    return (
+      inkModelStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.color && item.color.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
 
   return (
-    <div className="form-wrapper">
-      <div className="form-card">
-        <FaArrowLeft className="back-icon" onClick={() => navigate(-1)} />
-        <h2 className="form-title">Ink Inventory</h2>
-        {message && (
-          <p className={`form-message ${message.includes('success') ? 'success' : 'error'}`}>
-            {message}
-          </p>
-        )}
-
-        {/* Add Ink Button (Icon in Upper Right of Header) */}
-        <div className="header-actions">
-          <FaPlus
-            className="add-icon"
-            onClick={() => setShowForm(!showForm)} // Toggle form visibility
-          />
-        </div>
-
-        {/* Add Ink Form Popup */}
-        {showForm && (
-          <div className="form-popup">
-            <div className="form-popup-content">
-              <FaTimes className="close-btn" onClick={handleCloseForm} />
-              <form onSubmit={handleSubmit}>
-                <div className="form-row">
-                  {['quantity', 'color', 'inkModel'].map((field) => (
-                    <div className="form-col" key={field}>
-                      <label className="form-label">
-                        {field
-                          .replace(/([A-Z])/g, ' $1')
-                          .replace(/^./, (str) => str.toUpperCase())}
-                        :
-                      </label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        name={field}
-                        value={field === 'quantity' ? quantity : field === 'color' ? color : inkModel}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  ))}
-                </div>
-                <button type="submit" className="form-button">
-                  ADD INK
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Inventory Table */}
-        <h3 className="mt-4">Inventory List</h3>
-        <table className="table">
-          <thead className="table-dark">
-            <tr>
-              <th>Quantity</th>
-              <th>Color</th>
-              <th>Ink Model</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {inks.map((ink, index) => (
-              <tr key={ink._id} className={index % 2 === 0 ? 'even' : 'odd'}>
-                <td>{ink.quantity}</td>
-                <td>{ink.color}</td>
-                <td>{ink.inkModel}</td>
-                <td>
-                  <button className="btn-danger" onClick={() => handleDelete(ink._id)}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="inventory-container">
+      <h2>Inventory</h2>
+      <div className="toolbar">
+        <input
+          type="text"
+          placeholder="Search by Ink Model or Color"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+        />
+        <button onClick={() => setShowPopup(true)}>
+          <FaPlus /> Add New Inventory
+        </button>
       </div>
+      <table className="inventory-table" border="1" cellPadding="5">
+        <thead>
+          <tr>
+            <th>Ink Model</th>
+            <th>Color</th>
+            <th>Quantity</th>
+            <th>Volume</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredInventory.map(item => (
+            <tr key={item._id}>
+              <td>
+                {editingId === item._id ? (
+                  <select
+                    value={editData.ink_model}
+                    onChange={e => handleInkModelChange(e, setEditData)}
+                  >
+                    <option value="">Select Ink Model</option>
+                    {inkModels.map(model => (
+                      <option key={model._id} value={model._id}>
+                        {model.ink_name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  typeof item.ink_model === 'object'
+                    ? item.ink_model.ink_name
+                    : item.ink_model
+                )}
+              </td>
+              <td>
+                {editingId === item._id ? (
+                  <select
+                    value={editData.color}
+                    onChange={e => handleChange(e, 'color', setEditData)}
+                  >
+                    <option value="">Select Color</option>
+                    {getColorsForInkModel(editData.ink_model).map(color => (
+                      <option key={color} value={color}>
+                        {color}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  item.color
+                )}
+              </td>
+              <td>
+                {editingId === item._id ? (
+                  <input
+                    type="text"
+                    value={editData.quantity}
+                    onChange={e => handleChange(e, 'quantity', setEditData)}
+                  />
+                ) : (
+                  item.quantity
+                )}
+              </td>
+              <td>
+                {editingId === item._id ? (
+                  <input
+                    type="text"
+                    value={editData.volume}
+                    onChange={e => handleChange(e, 'volume', setEditData)}
+                  />
+                ) : (
+                  item.volume
+                )}
+              </td>
+              <td>
+                {editingId === item._id ? (
+                  <>
+                    <button onClick={saveEdit}>
+                      <FaSave /> Save
+                    </button>
+                    <button onClick={() => setEditingId(null)}>
+                      <FaTimes /> Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => {
+                      setEditingId(item._id);
+                      setEditData({
+                        ink_model: typeof item.ink_model === 'object'
+                          ? item.ink_model._id
+                          : item.ink_model,
+                        color: item.color,
+                        quantity: item.quantity,
+                        volume: item.volume
+                      });
+                    }}>
+                      <FaEdit /> Edit
+                    </button>
+                    <button onClick={() => deleteInventory(item._id)}>
+                      <FaTrash /> Delete
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {showPopup && (
+        <div className="popup">
+          <h3>Add New Inventory</h3>
+          <div>
+            <label>Ink Model: </label>
+            <select
+              value={newInventory.ink_model}
+              onChange={e => handleInkModelChange(e, setNewInventory)}
+            >
+              <option value="">Select Ink Model</option>
+              {inkModels.map(model => (
+                <option key={model._id} value={model._id}>
+                  {model.ink_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label>Color: </label>
+            <select
+              value={newInventory.color}
+              onChange={e => handleChange(e, 'color', setNewInventory)}
+            >
+              <option value="">Select Color</option>
+              {newInventory.ink_model &&
+                getColorsForInkModel(newInventory.ink_model).map(color => (
+                  <option key={color} value={color}>
+                    {color}
+                  </option>
+                ))
+              }
+            </select>
+          </div>
+          <div>
+            <label>Quantity: </label>
+            <input
+              type="text"
+              value={newInventory.quantity}
+              onChange={e => handleChange(e, 'quantity', setNewInventory)}
+            />
+          </div>
+          <div>
+            <label>Volume: </label>
+            <input
+              type="text"
+              value={newInventory.volume}
+              onChange={e => handleChange(e, 'volume', setNewInventory)}
+            />
+          </div>
+          <button onClick={saveNew}>Save</button>
+          <button onClick={() => setShowPopup(false)}>Cancel</button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Inventory;
+export default InventoryManagement;
