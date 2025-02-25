@@ -10,7 +10,8 @@ import { deductFromInkInUse } from './inkUsageHelper.js';
 export const submitInkRequest = async (req, res) => {
   try {
     const { printerId, ink_type } = req.body;
-    const userId = (req.user && req.user.id) || "000000000000000000000001";
+    const userId = req.user.id;
+
 
     // Look up the selected printer and populate its compatible_inks.
     const printer = await PrinterModel.findById(printerId).populate('compatible_inks');

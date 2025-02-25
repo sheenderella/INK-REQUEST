@@ -1,4 +1,3 @@
-// authController.js
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../model/users.js';
@@ -7,29 +6,33 @@ export const loginUser = async (req, res) => {
   const { username, password } = req.body;
 
   try {
+    // Check if user exists in the database
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials: User not found' });
     }
 
+    // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials: Incorrect password' });
     }
 
-    // Create a JWT token without an expiration time
+    // Create a JWT token
     const token = jwt.sign(
       { userId: user._id, username: user.username, role: user.role },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,  // Use your secret key
+      { expiresIn: '1h' } // Token expires in 1 hour
     );
 
+    // Send the token and the user's role back to the client
     return res.status(200).json({
       message: 'Login successful',
       token: token,
-      role: user.role,
+      role: user.role,  // Send the role to manage access control on the frontend
     });
   } catch (error) {
     console.error('Error logging in:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    return res.status(500).json({ message: 'Server error, please try again later.', error: error.message });
   }
 };

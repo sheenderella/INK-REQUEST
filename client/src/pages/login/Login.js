@@ -5,9 +5,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const Login = () => {
-  const [username, setUsername] = useState(''); // Changed from email to username
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(''); // For displaying error messages
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -19,7 +20,11 @@ const Login = () => {
       // Check if a token is returned
       if (response.data.token) {
         // Store the token in localStorage
-        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('authToken', response.data.token);
+
+        // Clear form after successful login
+        setUsername('');
+        setPassword('');
 
         // Check user role to redirect
         if (response.data.role === 'admin') {
@@ -30,7 +35,7 @@ const Login = () => {
       }
     } catch (error) {
       // Handle error if credentials are invalid or something goes wrong
-      alert(error.response?.data?.message || 'An error occurred. Please try again.');
+      setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
@@ -38,9 +43,13 @@ const Login = () => {
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-white text-black">
       <div className="card bg-white text-black p-4 shadow-lg" style={{ width: '500px' }}>
         <h2 className="text-center mb-4">Login</h2>
+
+        {/* Display error message if any */}
+        {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label">Username</label> {/* Changed label from Email to Username */}
+            <label className="form-label">Username</label>
             <input
               type="text"
               className="form-control border-black"
@@ -71,7 +80,6 @@ const Login = () => {
             </div>
           </div>
           <button type="submit" className="btn btn-dark w-100 mb-2">LOGIN</button>
-          
         </form>
       </div>
     </div>

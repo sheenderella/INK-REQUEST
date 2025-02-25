@@ -2,30 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './AdminDashboard.css'; // Your custom CSS file
-import { 
-  FaSignOutAlt, 
-  FaBoxOpen, 
-  FaUsers, 
-  FaClipboardCheck, 
-  FaTachometerAlt, 
-  FaBars 
-} from 'react-icons/fa';
+import './AdminDashboard.css';
+import { FaSignOutAlt, FaBoxOpen, FaUsers, FaClipboardCheck, FaTachometerAlt, FaBars } from 'react-icons/fa';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [lowStock, setLowStock] = useState(0);
 
-  // Dummy data for demonstration; replace with API calls as needed.
+  // Dummy data for demonstration; replace with actual API calls if necessary.
   useEffect(() => {
     setPendingRequests(5);
     setLowStock(3);
   }, []);
 
+  // Role Check on Page Load
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/');
+    } else {
+      const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode JWT token to get the role
+      setUserRole(decodedToken.role);
+    }
+  }, [navigate]);
+
   // Logout function
   const handleLogout = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken');
     if (token) {
       try {
         await axios.post(
@@ -36,17 +41,15 @@ const AdminDashboard = () => {
       } catch (error) {
         console.error('Error during logout:', error.response?.data || error.message);
       }
-      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
     }
-    navigate('/');
+    navigate('/'); // Redirect to login after logout
   };
 
-  // Merged Sidebar component (with full height adjusted and rounded corners)
+  // Sidebar component
   const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const navigate = useNavigate();
 
-    // Auto-collapse on small screens
     useEffect(() => {
       const handleResize = () => {
         if (window.innerWidth < 768) {
@@ -68,10 +71,9 @@ const AdminDashboard = () => {
 
     const toggleSidebar = () => setIsCollapsed(prev => !prev);
 
-    // Container style: reduced height with margin and rounded corners
     const containerStyle = {
       transition: 'width 0.3s ease',
-      height: 'calc(100vh - 40px)', // Not full screen—leaves 20px margin on top and bottom
+      height: 'calc(100vh - 40px)', // Adjusted to leave 20px margin top and bottom
       overflow: 'hidden',
       borderRadius: '10px',
       margin: '20px 0'
@@ -95,7 +97,6 @@ const AdminDashboard = () => {
           <button
             className="btn btn-dark text-white text-start sidebar-btn"
             onClick={goToDashboard}
-            style={{ justifyContent: 'flex-start' }}
           >
             <FaTachometerAlt />
             {!isCollapsed && <span className="ms-2 sidebar-text">Dashboard</span>}
@@ -103,7 +104,6 @@ const AdminDashboard = () => {
           <button
             className="btn btn-dark text-white text-start sidebar-btn"
             onClick={goToInventory}
-            style={{ justifyContent: 'flex-start' }}
           >
             <FaBoxOpen />
             {!isCollapsed && <span className="ms-2 sidebar-text">Inventory</span>}
@@ -111,7 +111,6 @@ const AdminDashboard = () => {
           <button
             className="btn btn-dark text-white text-start sidebar-btn"
             onClick={goToInkRequests}
-            style={{ justifyContent: 'flex-start' }}
           >
             <FaClipboardCheck />
             {!isCollapsed && <span className="ms-2 sidebar-text">Ink Requests</span>}
@@ -119,7 +118,6 @@ const AdminDashboard = () => {
           <button
             className="btn btn-dark text-white text-start sidebar-btn"
             onClick={goToUserManagement}
-            style={{ justifyContent: 'flex-start' }}
           >
             <FaUsers />
             {!isCollapsed && <span className="ms-2 sidebar-text">User Management</span>}
@@ -129,7 +127,6 @@ const AdminDashboard = () => {
           <button
             className="btn btn-dark text-white w-100 sidebar-btn"
             onClick={handleLogout}
-            style={{ justifyContent: 'flex-start' }}
           >
             <FaSignOutAlt />
             {!isCollapsed && <span className="ms-2 sidebar-text">Logout</span>}
@@ -141,15 +138,11 @@ const AdminDashboard = () => {
 
   return (
     <div className="am-wrapper d-flex p-3" style={{ minHeight: '100vh' }}>
-      {/* Sidebar aligned to left */}
       <Sidebar />
-      {/* Main Content with margin from sidebar */}
       <div className="am-card flex-fill p-4" style={{ borderRadius: '10px', marginLeft: '20px' }}>
         <div className="am-toolbar d-flex justify-content-between align-items-center mb-3">
           <h2 className="am-title m-0">Admin Dashboard</h2>
-         
         </div>
-        {/* Dashboard Metrics */}
         <div className="mt-4">
           <div className="row g-3">
             <div className="col-md-6">
@@ -166,30 +159,6 @@ const AdminDashboard = () => {
                   <h5 className="card-title">Low Stock Items</h5>
                   <p className="card-text display-4">{lowStock}</p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-
-          {/* Recent Ink Requests Summary */}
-          <div className="mt-4">
-            <div className="card" style={{ borderRadius: '15px' }}>
-              <div className="card-header bg-dark text-white">
-                Recent Ink Requests
-              </div>
-              <div className="card-body">
-                <p>No recent requests.</p>
-              </div>
-            </div>
-          </div>
-          {/* Inventory Status */}
-          <div className="mt-4">
-            <div className="card" style={{ borderRadius: '15px' }}>
-              <div className="card-header bg-dark text-white">
-                Inventory Status
-              </div>
-              <div className="card-body">
-                <p>No inventory data available.</p>
               </div>
             </div>
           </div>
