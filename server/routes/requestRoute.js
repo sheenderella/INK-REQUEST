@@ -1,6 +1,5 @@
 import express from 'express';
-// For production, uncomment token verification middleware.
-// import { verifyToken } from '../middleware/authMiddleware.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 import {
   submitInkRequest,
   getPendingSupervisorRequests,
@@ -11,17 +10,10 @@ import {
 
 const router = express.Router();
 
-// Dummy middleware for testing (sets req.user)
-router.use((req, res, next) => {
-  req.user = { id: "000000000000000000000001" }; // Valid dummy ObjectId
-  next();
-});
-
-// Endpoints:
-router.post('/ink/request', submitInkRequest);
-router.get('/ink/supervisor/requests', getPendingSupervisorRequests);
-router.post('/ink/supervisor', supervisorApproval);
-router.get('/ink/admin/requests', getPendingAdminRequests);
-router.post('/ink/admin', adminApprovalAndIssuance);
+router.post('/ink/request', verifyToken, submitInkRequest);
+router.get('/ink/supervisor/requests', verifyToken, getPendingSupervisorRequests);
+router.post('/ink/supervisor', verifyToken, supervisorApproval);
+router.get('/ink/admin/requests', verifyToken, getPendingAdminRequests);
+router.post('/ink/admin', verifyToken, adminApprovalAndIssuance);
 
 export default router;

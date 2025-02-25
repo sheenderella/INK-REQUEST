@@ -13,6 +13,7 @@ import {
 const router = express.Router();
 
 
+
 router.post('/register', verifyToken, createUser);
 router.get('/users', verifyToken, getAllUsers);
 router.get('/users/:id',verifyToken,  getUserById);

@@ -5,12 +5,13 @@ import {
   updateInventory,
   deleteInventory
 } from '../controller/inventoryController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/inventory', getAllInventory);
-router.post('/inventory', addInventory);
-router.put('/inventory/:id', updateInventory);
-router.delete('/inventory/:id', deleteInventory);
+router.get('/inventory', verifyToken, getAllInventory);
+router.post('/inventory', verifyToken, addInventory);
+router.put('/inventory/:id', verifyToken, updateInventory);
+router.delete('/inventory/:id', verifyToken, deleteInventory);
 
 export default router;

@@ -21,7 +21,6 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, username: user.username, role: user.role },
       process.env.JWT_SECRET
-      // Wala nang expiresIn dito
     );
 
     return res.status(200).json({
