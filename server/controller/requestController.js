@@ -7,6 +7,28 @@ import InkIssuance from '../model/ink_issuance.js';
 import InkModel from '../model/inkModels.js';
 import { deductFromInkInUse } from './inkUsageHelper.js';
 
+
+// Function to get ink requests for a specific user
+export const getUserRequests = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    // Fetch all ink requests for the given user
+    const userRequests = await InkRequest.find({ requested_by: userId })
+      .select('_id request_date supervisor_approval admin_approval status')  // Only select relevant fields
+      .populate('requested_by'); // Populate the 'requested_by' user reference if needed
+
+    // Return the user's requests
+    res.status(200).json(userRequests);
+  } catch (error) {
+    console.error('Error fetching user requests:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+
 export const submitInkRequest = async (req, res) => {
   try {
     const { printerId, ink_type, userId } = req.body; // Get userId from the body
@@ -65,6 +87,8 @@ export const submitInkRequest = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 export const getPendingSupervisorRequests = async (req, res) => {
   try {

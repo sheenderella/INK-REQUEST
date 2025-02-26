@@ -40,7 +40,7 @@ const DashboardUser = () => {
     <div className="dashboard-wrapper">
       <div className="dashboard-header">
         <h2 className="dashboard-title">INK REQUEST</h2>
-        <p>User ID: {userId}</p> {/* Display userId */}
+        {/* <p>User ID: {userId}</p> Display userId */}
         <button className="logout-button" onClick={handleLogout}>
           <FaSignOutAlt size={20} />
         </button>
