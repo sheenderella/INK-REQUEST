@@ -11,19 +11,21 @@ const RequestForm = () => {
     printerModel: '',
     color: [] // store multiple selected colors
   });
-
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('');  // State to store the message (error or success)
   const [printers, setPrinters] = useState([]); // State to store available printers
+
   useEffect(() => {
+    // Get token and userId from sessionStorage
+    const token = sessionStorage.getItem('authToken');
+    const userId = sessionStorage.getItem('userId');
+
+    if (!token || !userId) {
+      setMessage('No token or user session found. Please login again.');
+      navigate('/login'); // Redirect to login page if token or userId is missing
+      return;
+    }
+
     const fetchPrinters = async () => {
-      const token = localStorage.getItem('authToken'); // Retrieve token from localStorage
-  
-      if (!token) {
-        setMessage('No token found. Please login again.');
-        navigate('/login'); // Redirect to login page if no token is found
-        return;
-      }
-  
       try {
         const response = await axios.get('http://localhost:8000/api/printers', {
           headers: {
@@ -35,18 +37,18 @@ const RequestForm = () => {
         // If token is invalid or expired, redirect to login
         if (error.response && error.response.status === 401) {
           setMessage('Session expired. Please log in again.');
-          localStorage.removeItem('authToken'); // Remove invalid token
-          navigate('/'); // Redirect to login
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('userId');
+          navigate('/login'); // Redirect to login
         } else {
           setMessage('Failed to fetch printers.');
           console.error("Error fetching printers:", error);
         }
       }
     };
-  
-    fetchPrinters(); // Call the function inside useEffect
-  }, [navigate]); // Only rerun if navigate changes
-  
+
+    fetchPrinters();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
@@ -66,54 +68,55 @@ const RequestForm = () => {
   
     // Validate the form data before submitting
     if (!form.printerModel || form.color.length === 0) {
-      setMessage('All fields are required!');
+      setMessage('Ink type is required. Please select an ink type.');
       return;
     }
   
-    const token = localStorage.getItem('authToken'); // Retrieve token from localStorage
+    const token = sessionStorage.getItem('authToken');
+    const userId = sessionStorage.getItem('userId');
   
-    if (!token) {
-      setMessage('No token found. Please login again.');
-      navigate('/'); // Redirect to login if token is not found
+    if (!token || !userId) {
+      setMessage('No token or user session found. Please login again.');
+      navigate('/login');
       return;
     }
+  
+    // Log the printerModel, color, and userId before submitting
+    console.log("Selected Printer ID:", form.printerModel);
+    console.log("Selected Ink Colors:", form.color);
+    console.log("User ID:", userId);
+  
+    const payload = {
+      printerId: form.printerModel,
+      ink_type: form.color[0] || "black",  // Default to black if no ink type is selected
+      userId: userId  // Ensure that the userId is correctly passed
+    };
+    console.log("Payload being sent:", payload);
   
     try {
-      // Use the full URL for the POST request
-      const response = await axios.post('http://localhost:8000/api/ink/request', form, {
+      // Prepare payload including the userId
+      const response = await axios.post('http://localhost:8000/api/ink/request', payload, {
         headers: {
-          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          Authorization: `Bearer ${token}`,
         }
       });
   
-      // Handle success
       setMessage('Ink request submitted successfully!');
       console.log("Response:", response.data);
     } catch (error) {
-      // Enhanced error handling for more detailed feedback
       if (error.response) {
-        if (error.response.status === 401) {
-          setMessage('Session expired. Please log in again.');
-          localStorage.removeItem('authToken'); // Remove invalid token
-          navigate('/'); // Redirect to login
-        } else {
-          // If the server returned a response but not a 401
-          setMessage(`Failed to submit the request: ${error.response.data.message || error.response.statusText}`);
-          console.error("Error Response:", error.response);
-        }
+        setMessage(`Failed to submit the request: ${error.response.data.message || error.response.statusText}`);
+        console.error("Error Response:", error.response);
       } else if (error.request) {
-        // No response received from the server
         setMessage('No response from the server. Please try again later.');
         console.error("No response received:", error.request);
       } else {
-        // Something else went wrong (e.g., in request setup)
         setMessage(`Failed to submit the request. Error: ${error.message}`);
         console.error("Error:", error);
       }
     }
   };
   
-
   return (
     <div className="form-wrapper">
       <div className="form-card rounded-4">
@@ -136,25 +139,25 @@ const RequestForm = () => {
                 <option value="">Select Printer Model</option>
                 {printers.length > 0 ? (
                   printers.map((printer) => (
-                    <option key={printer._id} value={printer._id}> {/* Use _id here */}
-                      {printer.printer_name} {/* Display the printer name */}
+                    <option key={printer._id} value={printer._id}>
+                      {printer.printer_name}
                     </option>
                   ))
                 ) : (
-                  <option value="">No printers available</option> // If no printers are loaded
+                  <option value="">No printers available</option>
                 )}
               </select>
             </div>
           </div>
 
           <div className="form-section mb-4">
-            <label className="form-label">Color:</label><br />
+            <label className="form-label">Ink Type:</label><br />
             <div className="form-check me-3">
               <input
                 className="form-check-input custom-black-checkbox rounded-3 me-2"
                 type="checkbox"
                 name="color"
-                value="Black"
+                value="black"
                 onChange={handleChange}
               />
               <label className="form-check-label">Black</label>
@@ -164,11 +167,12 @@ const RequestForm = () => {
                 className="form-check-input rainbow-checkbox rounded-3 me-2"
                 type="checkbox"
                 name="color"
-                value="Colored"
+                value="colored"
                 onChange={handleChange}
               />
               <label className="form-check-label">Colored</label>
             </div>
+            {message.includes("Ink type is required") && <p className="error-message">Please select an ink type.</p>}
           </div>
 
           <button type="submit" className="form-button rounded-3 mt-4"> SUBMIT </button>

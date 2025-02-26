@@ -7,7 +7,6 @@ import { FaSignOutAlt, FaBoxOpen, FaUsers, FaClipboardCheck, FaTachometerAlt, Fa
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(null);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [lowStock, setLowStock] = useState(0);
 
@@ -17,36 +16,33 @@ const AdminDashboard = () => {
     setLowStock(3);
   }, []);
 
-  // Role Check on Page Load
+  // Role Check on Page Load (Ensure the user has a token in sessionStorage)
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (!token) {
-      navigate('/');
-    } else {
-      const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode JWT token to get the role
-      setUserRole(decodedToken.role);
+      navigate('/');  // Redirect to login if no token found
     }
   }, [navigate]);
 
-  // Logout function
+  // Logout function (clear session storage and navigate to login page)
   const handleLogout = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (token) {
       try {
-        await axios.post(
-          'http://localhost:8000/api/logout',
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        // Sending logout request to invalidate token in backend if needed
+        await axios.post('http://localhost:8000/api/logout', {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
       } catch (error) {
         console.error('Error during logout:', error.response?.data || error.message);
       }
-      localStorage.removeItem('authToken');
+      sessionStorage.removeItem('authToken');  // Clear token from sessionStorage
+      sessionStorage.removeItem('userId');     // Clear userId from sessionStorage
     }
-    navigate('/'); // Redirect to login after logout
+    navigate('/');  // Redirect to login page after logout
   };
 
-  // Sidebar component
+  // Sidebar component with collapsible functionality
   const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -60,7 +56,7 @@ const AdminDashboard = () => {
       };
 
       window.addEventListener('resize', handleResize);
-      handleResize();
+      handleResize();  // Trigger resize logic immediately
       return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -73,7 +69,7 @@ const AdminDashboard = () => {
 
     const containerStyle = {
       transition: 'width 0.3s ease',
-      height: 'calc(100vh - 40px)', // Adjusted to leave 20px margin top and bottom
+      height: 'calc(100vh - 40px)',  // Adjust to leave 20px margin top and bottom
       overflow: 'hidden',
       borderRadius: '10px',
       margin: '20px 0'

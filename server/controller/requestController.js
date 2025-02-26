@@ -9,9 +9,19 @@ import { deductFromInkInUse } from './inkUsageHelper.js';
 
 export const submitInkRequest = async (req, res) => {
   try {
-    const { printerId, ink_type } = req.body;
-    const userId = req.user.id;
+    const { printerId, ink_type, userId } = req.body; // Get userId from the body
+    const userIdFromToken = req.user.id;  // userId is already extracted from the token by the middleware
 
+    // Log received values
+    console.log("Received Printer ID:", printerId);
+    console.log("Received Ink Type:", ink_type);
+    console.log("Received User ID from Frontend:", userId);
+    console.log("User ID from Token:", userIdFromToken);
+
+    // Ensure ink_type is selected
+    if (!ink_type) {
+      return res.status(400).json({ error: 'Ink type is required. Please select an ink type.' });
+    }
 
     // Look up the selected printer and populate its compatible_inks.
     const printer = await PrinterModel.findById(printerId).populate('compatible_inks');
@@ -19,23 +29,15 @@ export const submitInkRequest = async (req, res) => {
       return res.status(404).json({ error: 'Printer not found' });
     }
 
-    const requestedInkType = ink_type || "black";
-    let selectedInkModel;
+    // Log printer and compatible ink models
+    console.log("Printer Document:", printer);
+    console.log("Compatible Inks:", printer.compatible_inks);
 
-    if (requestedInkType === "black") {
-      // Choose an InkModel that includes "black" in its colors.
-      selectedInkModel = printer.compatible_inks.find(model =>
-        model.colors.map(c => c.toLowerCase()).includes("black")
-      );
-    } else if (requestedInkType === "colored") {
-      // Choose an InkModel that has at least one color that is not "black".
-      selectedInkModel = printer.compatible_inks.find(model =>
-        model.colors.some(c => c.toLowerCase() !== "black")
-      );
-    }
+    // Fetch the first compatible ink model (or handle logic for multiple types)
+    const selectedInkModel = printer.compatible_inks[0];
 
     if (!selectedInkModel) {
-      return res.status(400).json({ error: 'No compatible ink model found for the selected printer and ink type.' });
+      return res.status(400).json({ error: 'No compatible ink model found for the selected printer.' });
     }
 
     // Find an Inventory record for the selected InkModel with available stock.
@@ -50,14 +52,16 @@ export const submitInkRequest = async (req, res) => {
     // Create a new InkRequest referencing this Inventory record.
     const newRequest = new InkRequest({
       ink: inventoryRecord._id,
-      requested_by: userId,
+      requested_by: userId,  // Use the userId obtained from the frontend (or token, if preferred)
       quantity_requested: 1,
-      ink_type: requestedInkType
+      ink_type: ink_type || "black"  // Default to black if no ink_type is provided
     });
 
     const savedRequest = await newRequest.save();
     res.status(201).json(savedRequest);
+
   } catch (error) {
+    console.error('Error in submitting ink request:', error);
     res.status(500).json({ error: error.message });
   }
 };

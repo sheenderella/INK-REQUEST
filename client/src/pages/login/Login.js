@@ -8,24 +8,23 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(''); // For displaying error messages
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send a POST request with the username and password
       const response = await axios.post('http://localhost:8000/api/login', { username, password });
-      
-      // Check if a token is returned
+  
       if (response.data.token) {
-        // Store the token in localStorage
-        localStorage.setItem('authToken', response.data.token);
-
-        // Clear form after successful login
+        // Store token and userId in sessionStorage
+        sessionStorage.setItem('authToken', response.data.token);
+        sessionStorage.setItem('userId', response.data.userId);
+  
+        // Clear form fields after successful login
         setUsername('');
         setPassword('');
-
+  
         // Check user role to redirect
         if (response.data.role === 'admin') {
           navigate('/admin');
@@ -34,17 +33,15 @@ const Login = () => {
         }
       }
     } catch (error) {
-      // Handle error if credentials are invalid or something goes wrong
       setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
-
+  
   return (
     <div className="d-flex align-items-center justify-content-center min-vh-100 bg-white text-black">
       <div className="card bg-white text-black p-4 shadow-lg" style={{ width: '500px' }}>
         <h2 className="text-center mb-4">Login</h2>
 
-        {/* Display error message if any */}
         {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
 
         <form onSubmit={handleSubmit}>

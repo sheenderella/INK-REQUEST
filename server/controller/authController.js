@@ -6,30 +6,39 @@ export const loginUser = async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Check if user exists in the database
     const user = await User.findOne({ username });
     if (!user) {
+      console.error('User not found:', username);
       return res.status(400).json({ message: 'Invalid credentials: User not found' });
     }
 
-    // Compare the provided password with the stored hashed password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password comparison result:', isMatch);  
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials: Incorrect password' });
     }
 
     // Create a JWT token
-    const token = jwt.sign(
-      { userId: user._id, username: user.username, role: user.role },
-      process.env.JWT_SECRET,  // Use your secret key
-      { expiresIn: '1h' } // Token expires in 1 hour
-    );
+    let token;
+    try {
+      token = jwt.sign(
+        { userId: user._id, username: user.username, role: user.role },
+        process.env.JWT_SECRET, 
+        { expiresIn: '1h' } 
+      );
+      console.log('Generated token:', token); 
+      console.log('User ID:', user._id); 
+    } catch (jwtError) {
+      console.error('Error generating token:', jwtError); 
+      return res.status(500).json({ message: 'Failed to generate token' });
+    }
 
-    // Send the token and the user's role back to the client
+    // Send the token, userId, and the user's role back to the client
     return res.status(200).json({
       message: 'Login successful',
       token: token,
-      role: user.role,  // Send the role to manage access control on the frontend
+      userId: user._id,  // Send the userId to store in frontend
+      role: user.role,    // Send the role to manage access control on the frontend
     });
   } catch (error) {
     console.error('Error logging in:', error);

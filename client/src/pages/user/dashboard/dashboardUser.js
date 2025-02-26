@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaSignOutAlt, FaClipboardList, FaSearch } from 'react-icons/fa';
@@ -6,16 +6,14 @@ import './dashboardUser.css';
 
 const DashboardUser = () => {
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(null);
 
-  // Check if the token exists on initial load
+  // Check if the token and userId exist on initial load
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/'); // Redirect to login if no token found
-    } else {
-      const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decode JWT token to get the role
-      setUserRole(decodedToken.role);
+    const token = sessionStorage.getItem('authToken');  // Get from sessionStorage
+    const userId = sessionStorage.getItem('userId');    // Get from sessionStorage
+    
+    if (!token || !userId) {
+      navigate('/'); // Redirect to login if no token or userId found
     }
   }, [navigate]);
 
@@ -29,16 +27,20 @@ const DashboardUser = () => {
     navigate('/track-request');
   };
 
-  // Logout function: clear token and navigate to login
   const handleLogout = () => {
-    localStorage.removeItem('authToken'); // Clear token on logout
-    navigate('/'); // Redirect to login after logout
+    sessionStorage.removeItem('authToken'); 
+    sessionStorage.removeItem('userId');    
+    navigate('/'); 
   };
+
+  // Get userId from sessionStorage for displaying
+  const userId = sessionStorage.getItem('userId');  
 
   return (
     <div className="dashboard-wrapper">
       <div className="dashboard-header">
         <h2 className="dashboard-title">INK REQUEST</h2>
+        <p>User ID: {userId}</p> {/* Display userId */}
         <button className="logout-button" onClick={handleLogout}>
           <FaSignOutAlt size={20} />
         </button>
