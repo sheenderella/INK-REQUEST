@@ -10,39 +10,35 @@ const AdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState(0);
   const [lowStock, setLowStock] = useState(0);
 
-  // Dummy data for demonstration; replace with actual API calls if necessary.
   useEffect(() => {
     setPendingRequests(5);
     setLowStock(3);
   }, []);
 
-  // Role Check on Page Load (Ensure the user has a token in sessionStorage)
   useEffect(() => {
     const token = sessionStorage.getItem('authToken');
     if (!token) {
-      navigate('/');  // Redirect to login if no token found
+      navigate('/');  
     }
   }, [navigate]);
 
-  // Logout function (clear session storage and navigate to login page)
   const handleLogout = async () => {
     const token = sessionStorage.getItem('authToken');
     if (token) {
       try {
-        // Sending logout request to invalidate token in backend if needed
-        await axios.post('http://localhost:8000/api/logout', {}, {
+          await axios.post('http://localhost:8000/api/logout', {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } catch (error) {
         console.error('Error during logout:', error.response?.data || error.message);
       }
-      sessionStorage.removeItem('authToken');  // Clear token from sessionStorage
-      sessionStorage.removeItem('userId');     // Clear userId from sessionStorage
+      sessionStorage.removeItem('authToken');  
+      sessionStorage.removeItem('userId');    
     }
-    navigate('/');  // Redirect to login page after logout
+    navigate('/');  
   };
 
-  // Sidebar component with collapsible functionality
+
   const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -56,7 +52,7 @@ const AdminDashboard = () => {
       };
 
       window.addEventListener('resize', handleResize);
-      handleResize();  // Trigger resize logic immediately
+      handleResize();  
       return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -69,7 +65,7 @@ const AdminDashboard = () => {
 
     const containerStyle = {
       transition: 'width 0.3s ease',
-      height: 'calc(100vh - 40px)',  // Adjust to leave 20px margin top and bottom
+      height: 'calc(100vh - 40px)',  
       overflow: 'hidden',
       borderRadius: '10px',
       margin: '20px 0'
