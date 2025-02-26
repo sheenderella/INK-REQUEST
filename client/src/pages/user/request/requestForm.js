@@ -9,19 +9,18 @@ const RequestForm = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     printerModel: '',
-    color: [] // store multiple selected colors
+    color: [] 
   });
-  const [message, setMessage] = useState('');  // State to store the message (error or success)
-  const [printers, setPrinters] = useState([]); // State to store available printers
+  const [message, setMessage] = useState('');  
+  const [printers, setPrinters] = useState([]); 
 
   useEffect(() => {
-    // Get token and userId from sessionStorage
     const token = sessionStorage.getItem('authToken');
     const userId = sessionStorage.getItem('userId');
 
     if (!token || !userId) {
       setMessage('No token or user session found. Please login again.');
-      navigate('/login'); // Redirect to login page if token or userId is missing
+      navigate('/');
       return;
     }
 
@@ -29,17 +28,16 @@ const RequestForm = () => {
       try {
         const response = await axios.get('http://localhost:8000/api/printers', {
           headers: {
-            Authorization: `Bearer ${token}`, // Send the token in the Authorization header
+            Authorization: `Bearer ${token}`, 
           }
         });
-        setPrinters(response.data); // Assuming response contains an array of printer data
+        setPrinters(response.data); 
       } catch (error) {
-        // If token is invalid or expired, redirect to login
         if (error.response && error.response.status === 401) {
           setMessage('Session expired. Please log in again.');
           sessionStorage.removeItem('authToken');
           sessionStorage.removeItem('userId');
-          navigate('/login'); // Redirect to login
+          navigate('/login'); 
         } else {
           setMessage('Failed to fetch printers.');
           console.error("Error fetching printers:", error);
@@ -66,8 +64,7 @@ const RequestForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    // Validate the form data before submitting
-    if (!form.printerModel || form.color.length === 0) {
+      if (!form.printerModel || form.color.length === 0) {
       setMessage('Ink type is required. Please select an ink type.');
       return;
     }
@@ -77,24 +74,17 @@ const RequestForm = () => {
   
     if (!token || !userId) {
       setMessage('No token or user session found. Please login again.');
-      navigate('/login');
+      navigate('/'); 
       return;
     }
   
-    // Log the printerModel, color, and userId before submitting
-    console.log("Selected Printer ID:", form.printerModel);
-    console.log("Selected Ink Colors:", form.color);
-    console.log("User ID:", userId);
-  
     const payload = {
       printerId: form.printerModel,
-      ink_type: form.color[0] || "black",  // Default to black if no ink type is selected
-      userId: userId  // Ensure that the userId is correctly passed
+      ink_type: form.color[0] || 'black', 
+      userId: userId  
     };
-    console.log("Payload being sent:", payload);
   
     try {
-      // Prepare payload including the userId
       const response = await axios.post('http://localhost:8000/api/ink/request', payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -103,6 +93,9 @@ const RequestForm = () => {
   
       setMessage('Ink request submitted successfully!');
       console.log("Response:", response.data);
+  
+      navigate(-1);  
+  
     } catch (error) {
       if (error.response) {
         setMessage(`Failed to submit the request: ${error.response.data.message || error.response.statusText}`);
@@ -117,6 +110,7 @@ const RequestForm = () => {
     }
   };
   
+  
   return (
     <div className="form-wrapper">
       <div className="form-card rounded-4">
@@ -126,7 +120,7 @@ const RequestForm = () => {
         {message && <p className={`form-message ${message.includes('success') ? 'success' : 'error'}`}>{message}</p>}
         <form onSubmit={handleSubmit}>
           <div className="form-row">
-            {/* Printer Model Dropdown */}
+  
             <div className="form-col">
               <label className="form-label">Printer Model:</label>
               <select
@@ -181,5 +175,4 @@ const RequestForm = () => {
     </div>
   );
 };
-
 export default RequestForm;

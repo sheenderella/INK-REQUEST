@@ -62,7 +62,7 @@ const AdminDashboard = () => {
 
     const goToDashboard = () => navigate('/admin');
     const goToInventory = () => navigate('/inventory');
-    const goToInkRequests = () => navigate('/ink-requests');
+    const goToInkRequests = () => navigate('/for-approval');
     const goToUserManagement = () => navigate('/account-management');
 
     const toggleSidebar = () => setIsCollapsed(prev => !prev);

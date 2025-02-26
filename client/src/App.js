@@ -5,6 +5,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import AdminDashboard from "../src/pages/admin/dashboard/AdminDashboard";
 import Inventory from "./pages/admin/inventory/inventory";
 import AccountManagement from "./pages/admin/accounts/AccountManagement";
+import ForApproval from "./pages/admin/forApproval/approval";
 
 
 // Login Page
@@ -80,6 +81,15 @@ function App() {
       element: (
         <PrivateRoute>
           <AccountManagement />
+        </PrivateRoute>
+      )
+    },
+
+    { 
+      path: "/for-approval", 
+      element: (
+        <PrivateRoute>
+          <ForApproval />
         </PrivateRoute>
       )
     },
