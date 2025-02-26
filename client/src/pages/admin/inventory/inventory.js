@@ -21,10 +21,8 @@ const InventoryManagement = () => {
   const [newInventory, setNewInventory] = useState({ ink_model: '', color: '', quantity: '', volume: '' });
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Get the token (assuming it's in localStorage)
   const token = localStorage.getItem('token');
 
-  // Memoizing the fetchInventory function with useCallback
   const fetchInventory = useCallback(() => {
     axios.get('http://localhost:8000/api/inventory', {
       headers: {
@@ -35,7 +33,6 @@ const InventoryManagement = () => {
       .catch(err => console.error('Error fetching inventory:', err));
   }, [token]);
 
-  // Memoizing the fetchInkModels function with useCallback
   const fetchInkModels = useCallback(() => {
     axios.get('http://localhost:8000/api/inks/models', {
       headers: {
@@ -49,7 +46,6 @@ const InventoryManagement = () => {
       .catch(err => console.error('Error fetching ink models:', err));
   }, [token]);
 
-  // Fetch inventory and ink models on mount
   useEffect(() => {
     fetchInventory();
     fetchInkModels();
