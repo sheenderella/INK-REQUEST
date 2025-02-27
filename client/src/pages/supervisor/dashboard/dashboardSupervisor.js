@@ -24,7 +24,7 @@ const DashboardSupervisor = () => {
 
   // Navigate to the track request page
   const goToTrackRequest = () => {
-    navigate('/track-request');
+    navigate('/TrackSupervisor');
   };
 
   // Navigate to the ApprovalSupervisor page for approving requests
