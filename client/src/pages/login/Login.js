@@ -13,29 +13,33 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!username.trim() || !password.trim()) {
+      setErrorMessage("Username and password are required.");
+      return;
+    }
+  
     try {
       const response = await axios.post('http://localhost:8000/api/login', { username, password });
   
       if (response.data.token) {
-        // Store token and userId in sessionStorage
         sessionStorage.setItem('authToken', response.data.token);
         sessionStorage.setItem('userId', response.data.userId);
-  
-        // Clear form fields after successful login
+        
         setUsername('');
         setPassword('');
   
-        // Check user role to redirect
         if (response.data.role === 'admin') {
           navigate('/admin');
         } else if (response.data.role === 'supervisor') {
-          navigate('/dashboardSupervisor'); // Navigate to supervisor dashboard
+          navigate('/dashboardSupervisor');
         } else {
           navigate('/dashboard-user');
         }
       }
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+      console.error('Login Error:', error);
+      setErrorMessage(error?.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
   

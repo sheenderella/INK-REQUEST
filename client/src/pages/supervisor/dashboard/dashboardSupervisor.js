@@ -3,32 +3,19 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaSignOutAlt, FaClipboardList, FaSearch, FaCheck } from 'react-icons/fa';
+import './dashboardSupervisor.css'; // Ensure the CSS styles are applied.
 
 const DashboardSupervisor = () => {
   const navigate = useNavigate();
-  const [requests, setRequests] = useState([]);
 
   useEffect(() => {
     const token = sessionStorage.getItem('authToken');
     const userId = sessionStorage.getItem('userId');
 
     if (!token || !userId) {
-      navigate('/'); 
-      return;
+      navigate('/');
     }
-
-    fetchRequests();
   }, [navigate]);
-
-  const fetchRequests = async () => {
-    try {
-      const response = await fetch('/api/requests'); 
-      const data = await response.json();
-      setRequests(data);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-    }
-  };
 
   // Navigate to the request form page
   const goToRequestForm = () => {
@@ -37,7 +24,7 @@ const DashboardSupervisor = () => {
 
   // Navigate to the track request page
   const goToTrackRequest = () => {
-    navigate('/TrackSupervisor');
+    navigate('/track-request');
   };
 
   // Navigate to the ApprovalSupervisor page for approving requests
@@ -45,22 +32,10 @@ const DashboardSupervisor = () => {
     navigate('/ApprovalSupervisor');
   };
 
-  // Handle logging out
   const handleLogout = () => {
     sessionStorage.removeItem('authToken');
     sessionStorage.removeItem('userId');
     navigate('/');
-  };
-
-  // (Optional) Individual request approval/rejection handlers
-  const handleApproveRequest = (requestId) => {
-    console.log(`Request with ID ${requestId} approved`);
-    setRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
-  };
-
-  const handleRejectRequest = (requestId) => {
-    console.log(`Request with ID ${requestId} rejected`);
-    setRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
   };
 
   return (
