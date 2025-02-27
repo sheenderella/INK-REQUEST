@@ -1,27 +1,27 @@
 import "./App.css";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
-// Admin Pages
-import AdminDashboard from "../src/pages/admin/dashboard/AdminDashboard";
-import Inventory from "./pages/admin/inventory/inventory";
-import AccountManagement from "./pages/admin/accounts/AccountManagement";
-import ForApproval from "./pages/admin/forApproval/approval";
-
-
 // Login Page
 import Login from "./pages/login/Login";
 
 // Error Page
 import ErrorPage from "./components/ErrorPage";
 
+// Admin Pages
+import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
+import Inventory from "./pages/admin/inventory/inventory";
+import AccountManagement from "./pages/admin/accounts/AccountManagement";
+import ForApproval from "./pages/admin/forApproval/approval";
+
 // User Pages
-import RequestForm from './pages/user/request/requestForm';
 import DashboardUser from './pages/user/dashboard/dashboardUser';
+import RequestForm from './pages/user/request/requestForm';
 import TrackRequest from './pages/user/track/trackRequest';
 
-//Supervisor Pages
-
-
+// Supervisor Pages
+import DashboardSupervisor from './pages/supervisor/dashboard/dashboardSupervisor';
+import ApprovalSupervisor from './pages/supervisor/approval/approval';
+import TrackSupervisor from './pages/supervisor/track/trackRequest'; // Renamed for consistency
 
 // PrivateRoute Component
 import PrivateRoute from "./components/PrivateRoute";
@@ -30,7 +30,6 @@ function App() {
   const route = createBrowserRouter([
     { path: "/", element: <Login /> },
     
-   
     // Protected user routes
     { 
       path: "/request", 
@@ -57,7 +56,7 @@ function App() {
       ) 
     },
    
-    // Protected admin route
+    // Protected admin routes
     { 
       path: "/admin", 
       element: (
@@ -66,7 +65,6 @@ function App() {
         </PrivateRoute>
       )
     },
-
     { 
       path: "/inventory", 
       element: (
@@ -75,7 +73,6 @@ function App() {
         </PrivateRoute>
       ) 
     },
-
     { 
       path: "/account-management", 
       element: (
@@ -84,7 +81,6 @@ function App() {
         </PrivateRoute>
       )
     },
-
     { 
       path: "/for-approval", 
       element: (
@@ -94,12 +90,34 @@ function App() {
       )
     },
     
+    // Protected supervisor routes
+    { 
+      path: "/dashboardSupervisor", 
+      element: (
+        <PrivateRoute>
+          <DashboardSupervisor />
+        </PrivateRoute>
+      )
+    },
 
+    { 
+      path: "/ApprovalSupervisor", 
+      element: (
+        <PrivateRoute>
+          <ApprovalSupervisor />
+        </PrivateRoute>
+      )
+    },
 
+    { 
+      path: "/TrackSupervisor",  // Added missing route for TrackSupervisor
+      element: (
+        <PrivateRoute>
+          <TrackSupervisor />
+        </PrivateRoute>
+      )
+    },
 
-
-
-    
     // Fallback 
     { path: "*", element: <ErrorPage /> } 
   ]);

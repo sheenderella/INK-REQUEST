@@ -28,6 +28,8 @@ const Login = () => {
         // Check user role to redirect
         if (response.data.role === 'admin') {
           navigate('/admin');
+        } else if (response.data.role === 'supervisor') {
+          navigate('/dashboardSupervisor'); // Navigate to supervisor dashboard
         } else {
           navigate('/dashboard-user');
         }

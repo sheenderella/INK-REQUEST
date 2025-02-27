@@ -14,7 +14,7 @@ const AccountManagement = () => {
     first_name: '',
     last_name: '',
     email: '',
-    role: 'Employee',
+    role: 'employee',
     department: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,7 +74,7 @@ const AccountManagement = () => {
           first_name: '',
           last_name: '',
           email: '',
-          role: 'Employee',
+          role: 'employee',
           department: ''
         });
         setShowPopup(false);
@@ -117,9 +117,9 @@ const AccountManagement = () => {
               onChange={e => setRoleFilter(e.target.value)}
             >
               <option value="">All Roles</option>
-              <option value="Employee">Employee</option>
-              <option value="Supervisor">Supervisor</option>
-              <option value="Admin">Admin</option>
+              <option value="employee">Employee</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
@@ -182,9 +182,9 @@ const AccountManagement = () => {
                         onChange={e => handleChange(e, 'role', setEditData, editData)}
                         className="am-input"
                       >
-                        <option value="Employee">Employee</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Admin">Admin</option>
+                        <option value="employee">Employee</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="admin">Admin</option>
                       </select>
                     ) : (
                       user.role
@@ -254,9 +254,9 @@ const AccountManagement = () => {
             <div className="am-form-group">
               <label>Role</label>
               <select value={newUser.role} onChange={e => handleChange(e, 'role', setNewUser, newUser)} className="am-input">
-                <option value="Employee">Employee</option>
-                <option value="Supervisor">Supervisor</option>
-                <option value="Admin">Admin</option>
+                <option value="employee">Employee</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
             <div className="am-popup-actions">

@@ -33,12 +33,11 @@ export const loginUser = async (req, res) => {
       return res.status(500).json({ message: 'Failed to generate token' });
     }
 
-    // Send the token, userId, and the user's role back to the client
     return res.status(200).json({
       message: 'Login successful',
       token: token,
-      userId: user._id,  // Send the userId to store in frontend
-      role: user.role,    // Send the role to manage access control on the frontend
+      userId: user._id, 
+      role: user.role,    
     });
   } catch (error) {
     console.error('Error logging in:', error);

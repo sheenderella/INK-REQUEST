@@ -9,11 +9,11 @@ const DashboardUser = () => {
 
   // Check if the token and userId exist on initial load
   useEffect(() => {
-    const token = sessionStorage.getItem('authToken');  // Get from sessionStorage
-    const userId = sessionStorage.getItem('userId');    // Get from sessionStorage
+    const token = sessionStorage.getItem('authToken');  
+    const userId = sessionStorage.getItem('userId');    
     
     if (!token || !userId) {
-      navigate('/'); // Redirect to login if no token or userId found
+      navigate('/'); 
     }
   }, [navigate]);
 

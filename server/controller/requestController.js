@@ -24,8 +24,6 @@ export const getUserRequests = async (req, res) => {
 };
 
 
-
-
 export const submitInkRequest = async (req, res) => {
   try {
     const { printerId, ink_type, userId } = req.body; 
@@ -80,7 +78,6 @@ export const submitInkRequest = async (req, res) => {
 };
 
 
-
 export const getPendingSupervisorRequests = async (req, res) => {
   try {
     const pendingRequests = await InkRequest.find({ supervisor_approval: 'Pending' })
@@ -120,19 +117,26 @@ export const supervisorApproval = async (req, res) => {
   }
 };
 
+
 export const getPendingAdminRequests = async (req, res) => {
   try {
     const pendingRequests = await InkRequest.find({
       supervisor_approval: 'Approved',
       admin_approval: 'Pending'
     })
-      .populate('ink')
-      .populate('requested_by');
-    res.status(200).json(pendingRequests);
+      // Populate the 'ink' field to get the Inventory details
+      .populate('ink')  // This will populate the 'ink' field with 'Inventory' data
+      // Now populate 'ink_model' within the 'ink' field to get 'ink_name' from 'InkModel'
+      .populate('ink.ink_model', 'ink_name')  // Populating 'ink_model' within 'ink' to get 'ink_name'
+      .populate('requested_by', 'first_name last_name department')  // Populate requested_by fields
+      .exec();
+
+    res.status(200).json(pendingRequests); // Return the populated requests
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 export const adminApprovalAndIssuance = async (req, res) => {
   try {
