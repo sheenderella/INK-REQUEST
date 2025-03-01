@@ -1,246 +1,108 @@
-/* Wrapper and Card */
-.form-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    background-color: white;
-    color: black;
-    padding: 2rem;
-  }
-  
-  .form-card {
-    background-color: white;
-    color: black;
-    padding: 2rem;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 1000px;
-    width: 80%;
-    border-radius: 20px;
-    position: relative;
-  }
-  
-  /* Icons */
-  .back-icon {
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: black;
-  }
-  
-  .add-icon {
-    font-size: 2rem;
-    color: black;
-    cursor: pointer;
-    margin-bottom: 10px;
-  }
-  
-  .add-icon:hover {
-    color: black;
-  }
-  
-  .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: black;
-  }
-  
-  .close-btn:hover {
-    color: black;
-  }
-  
-  /* Titles and Messages */
-  .form-title {
-    text-align: center;
-    margin-bottom: 1rem;
-  }
-  
-  .form-subtitle {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  
-  .form-message {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: black;
-  }
-  
-  .success,
-  .error {
-    color: black;
-  }
-  
-  /* Form Inputs */
-  .form-row {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .form-col {
-    flex: 1;
-  }
-  
-  .form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-  }
-  
-  .form-input {
-    width: 100%;
-    border: 1px solid black;
-    padding: 0.5rem;
-    border-radius: 10px;
-  }
-  
-  .form-button {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: black;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 10px;
-    margin-top: 1rem;
-  }
-  
-  /* Popup Form */
-  .form-popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
-    z-index: 10;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .form-popup-content {
-    background-color: white;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 80%;
-    max-width: 500px;
-    border-radius: 10px;
-    position: relative;
-  }
-  
-  /* Inventory Table */
-  .table {
-    width: 100%;
-    margin-top: 20px;
-  }
-  
-  .table-dark th {
-    background-color: black;
-    color: white;
-  }
-  
-  .table th,
-  .table td {
-    padding: 10px;
-    text-align: left;
-  }
-  
-  .even {
-    background-color: #f2f2f2;
-  }
-  
-  .odd {
-    background-color: #ffffff;
-  }
-  
-  .btn-danger {
-    background-color: black;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .btn-danger:hover {
-    background-color: black;
-  }
-  
-
-  /* Ensures that the popup overlays correctly */
-.popup {
-  position: fixed;  /* Makes the popup stay in the same position on the screen */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);  /* Dark background with some opacity */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999; /* Ensure it's on top of other content */
-}
-
-/* Popup content styles */
-.popup-content {
-  background: white;
-  padding: 20px;
+/* Inventory Table Styling */
+.am-table-responsive {
+  overflow-x: auto;
   border-radius: 8px;
-  max-width: 800px;
-  width: 100%;
-  overflow-y: auto;
-  z-index: 10000;  /* Make sure the content itself is on top of the background */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
 }
 
-/* Style for input fields and buttons */
-.popup input,
-.popup textarea {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.popup button {
-  padding: 10px 20px;
-  margin-right: 10px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.popup button:hover {
-  background-color: #45a049;
-}
-
-.popup button:last-child {
-  background-color: #f44336;
-}
-
-.popup button:last-child:hover {
-  background-color: #d32f2f;
-}
-
-/* Popup table styles */
-.popup table {
+.am-table {
   width: 100%;
   border-collapse: collapse;
+  background-color: #ffffff;
 }
 
-.popup table th,
-.popup table td {
-  border: 1px solid #ddd;
-  padding: 10px;
+.am-table th,
+.am-table td {
+  padding: 12px 15px;
   text-align: left;
+  border-bottom: 1px solid #ddd;
 }
 
-.popup table th {
-  background-color: #f2f2f2;
+.am-table thead {
+  background-color: #004085;
+  color: #ffffff;
 }
+
+.am-table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.am-table td {
+  font-size: 14px;
+  color: #333;
+}
+
+/* Editing Row Highlight */
+.am-editing {
+  background-color: #e8f0fe;
+}
+
+/* Button Styling */
+.am-btn {
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.am-btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.am-btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.am-btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.am-btn-danger:hover {
+  background-color: #a71d2a;
+}
+
+.am-btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.am-btn-success:hover {
+  background-color: #1d7d33;
+}
+
+.am-btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.am-btn-secondary:hover {
+  background-color: #565e64;
+}
+
+/* Search and Input Styling */
+.am-input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: white;
+}
+
+.am-input {
+  border: none;
+  padding: 8px;
+  flex-grow: 1;
+  outline: none;
+}
+
+.am-icon {
+  margin: 0 8px;
+  color: #555;
+}
+

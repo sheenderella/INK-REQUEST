@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { FaArrowLeft } from 'react-icons/fa';
 import './requestForm.css';
+
 
 const RequestForm = () => {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ const RequestForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-      if (!form.printerModel || form.color.length === 0) {
+    if (!form.printerModel || form.color.length === 0) {
       setMessage('Ink type is required. Please select an ink type.');
       return;
     }
@@ -95,7 +95,6 @@ const RequestForm = () => {
       console.log("Response:", response.data);
   
       navigate(-1);  
-  
     } catch (error) {
       if (error.response) {
         setMessage(`Failed to submit the request: ${error.response.data.message || error.response.statusText}`);
@@ -110,69 +109,89 @@ const RequestForm = () => {
     }
   };
   
-  
   return (
-    <div className="form-wrapper">
-      <div className="form-card rounded-4">
-        <FaArrowLeft className="back-icon" onClick={() => navigate(-1)} />
-        <h2 className="form-title">Ink Request</h2>
-        <p className="form-subtitle">Please fill out the form for request</p>
-        {message && <p className={`form-message ${message.includes('success') ? 'success' : 'error'}`}>{message}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className="form-row">
-  
-            <div className="form-col">
-              <label className="form-label">Printer Model:</label>
-              <select
-                className="form-input rounded-3"
-                name="printerModel"
-                value={form.printerModel}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Printer Model</option>
-                {printers.length > 0 ? (
-                  printers.map((printer) => (
-                    <option key={printer._id} value={printer._id}>
-                      {printer.printer_name}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">No printers available</option>
-                )}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-section mb-4">
-            <label className="form-label">Ink Type:</label><br />
-            <div className="form-check me-3">
-              <input
-                className="form-check-input custom-black-checkbox rounded-3 me-2"
-                type="checkbox"
-                name="color"
-                value="black"
-                onChange={handleChange}
-              />
-              <label className="form-check-label">Black</label>
-            </div>
-            <div className="form-check">
-              <input
-                className="form-check-input rainbow-checkbox rounded-3 me-2"
-                type="checkbox"
-                name="color"
-                value="colored"
-                onChange={handleChange}
-              />
-              <label className="form-check-label">Colored</label>
-            </div>
-            {message.includes("Ink type is required") && <p className="error-message">Please select an ink type.</p>}
-          </div>
-
-          <button type="submit" className="form-button rounded-3 mt-4"> SUBMIT </button>
-        </form>
-      </div>
+    <div className="custom-card p-4">
+    {/* Centered Title & Description */}
+    <div className="text-center">
+      <h2 className="mb-3 custom-title">Ink Request</h2>
+      <p className="mb-4 custom-text">Please fill out the form for your ink request.</p>
     </div>
-  );
-};
+  
+    {message && (
+      <div className={`alert ${message.includes('success') ? 'alert-success' : 'alert-danger'}`}>
+        {message}
+      </div>
+    )}
+  
+    <form onSubmit={handleSubmit}>
+
+      {/* Printer Model Field */}
+      <div className="custom-form-group mb-3">
+        <label className="form-label field-label">Printer Model:</label>
+        <select
+          className="form-select custom-select"
+          name="printerModel"
+          value={form.printerModel}
+          onChange={handleChange}
+          required
+        >
+          <option value="">Select Printer Model</option>
+          {printers.length > 0 ? (
+            printers.map((printer) => (
+              <option key={printer._id} value={printer._id}>
+                {printer.printer_name}
+              </option>
+            ))
+          ) : (
+            <option value="">No printers available</option>
+          )}
+        </select>
+      </div>
+  
+{/* Ink Type Field */}
+<div className="custom-form-group mb-3">
+  <label className="form-label field-label">Ink Type:</label>
+  <fieldset>
+    <div className="form-check form-check-inline">
+      <input
+        className="form-check-input custom-checkbox"
+        type="checkbox"
+        name="color"
+        id="inkBlack"
+        value="black"
+        onChange={handleChange}
+      />
+      <label className="form-check-label custom-label" htmlFor="inkBlack">
+        Black
+      </label>
+    </div>
+
+    <div className="form-check form-check-inline">
+      <input
+        className="form-check-input custom-checkbox"
+        type="checkbox"
+        name="color"
+        id="inkColored"
+        value="colored"
+        onChange={handleChange}
+      />
+      <label className="form-check-label custom-label" htmlFor="inkColored">
+        Colored
+      </label>
+    </div>
+    {message.includes("Ink type is required") && (
+      <p className="text-danger mt-2">Please select an ink type.</p>
+    )}
+  </fieldset>
+</div>
+  
+      {/* Centered Submit Button */}
+      <div className="text-center">
+        <button type="submit" className="btn btn-primary mt-3 custom-button">
+          SUBMIT
+        </button>
+      </div>
+    </form>
+  </div>
+)};
 export default RequestForm;

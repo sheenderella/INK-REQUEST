@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   FaEdit,
   FaTrash,
   FaPlus,
   FaSearch,
-  FaAngleLeft,
-  FaAngleRight,
+
   FaSave,
   FaTimes
 } from 'react-icons/fa';
 import './inventory.css';
+import SideNav from '../../../components/SideNav'; 
 
 const InventoryManagement = () => {
   const [inventory, setInventory] = useState([]);
@@ -20,31 +21,50 @@ const InventoryManagement = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [newInventory, setNewInventory] = useState({ ink_model: '', color: '', quantity: '', volume: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [user, setUser] = useState(null);
 
-  const token = localStorage.getItem('token');
+  const navigate = useNavigate();
+  const token = sessionStorage.getItem("authToken");
+  const userId = sessionStorage.getItem("userId");
 
-  const fetchInventory = useCallback(() => {
-    axios.get('http://localhost:8000/api/inventory', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+ // Fetch user data for sidebar
+ useEffect(() => {
+  if (!token || !userId) {
+    navigate("/");
+    return;
+  }
+
+  axios
+    .get(`http://localhost:8000/api/users/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 5000,
     })
-      .then(res => setInventory(res.data))
-      .catch(err => console.error('Error fetching inventory:', err));
-  }, [token]);
+    .then((response) => setUser(response.data))
+    .catch((error) => {
+      console.error("Error fetching user data:", error);
+    });
+}, [navigate, token, userId]);
 
-  const fetchInkModels = useCallback(() => {
-    axios.get('http://localhost:8000/api/inks/models', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(res => {
-        console.log('Fetched ink models:', res.data);
-        setInkModels(res.data);
-      })
-      .catch(err => console.error('Error fetching ink models:', err));
-  }, [token]);
+
+const fetchInventory = useCallback(() => {
+  axios.get('http://localhost:8000/api/inventory', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then(res => setInventory(res.data))
+    .catch(err => console.error('Error fetching inventory:', err));
+}, [token]);
+
+const fetchInkModels = useCallback(() => {
+  axios.get('http://localhost:8000/api/inks/models', {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then(res => setInkModels(res.data))
+    .catch(err => console.error('Error fetching ink models:', err));
+}, [token]);
 
   useEffect(() => {
     fetchInventory();
@@ -136,9 +156,13 @@ const InventoryManagement = () => {
   });
 
   return (
-    <div className="am-wrapper">
+    <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}>
+      <SideNav user={user} />
       <div className="am-card">
-        <h2 className="am-title">Inventory</h2>
+
+      <div className="content" style={{ height: "50vh" }}> 
+        <h2 className="dashboard-title">DASHBOARD</h2>
+
         <div className="am-toolbar">
           <div className="am-input-group am-search">
             <FaSearch className="am-icon" />
@@ -150,6 +174,7 @@ const InventoryManagement = () => {
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
+
           <button className="am-btn am-btn-danger">
             <FaTrash className="am-icon" />
           </button>
@@ -157,7 +182,10 @@ const InventoryManagement = () => {
           <button className="am-btn am-btn-success" onClick={() => setShowPopup(true)}>
             <FaPlus className="am-icon" />
           </button>
+
         </div>
+
+        
         <div className="am-table-responsive">
           <table className="am-table">
             <thead>
@@ -273,26 +301,8 @@ const InventoryManagement = () => {
             </tbody>
           </table>
         </div>
-        <div className="am-pagination">
-          <ul className="pagination">
-            <li className="page-item disabled">
-              <button className="page-link">
-                <FaAngleLeft />
-              </button>
-            </li>
-            <li className="page-item active">
-              <button className="page-link">1</button>
-            </li>
-            <li className="page-item">
-              <button className="page-link">2</button>
-            </li>
-            <li className="page-item">
-              <button className="page-link">
-                <FaAngleRight />
-              </button>
-            </li>
-          </ul>
-        </div>
+
+      </div>
       </div>
 
       {showPopup && (

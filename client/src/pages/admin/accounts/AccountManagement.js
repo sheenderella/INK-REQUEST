@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes } from 'react-icons/fa';
-import SideNav from '../../../components/SideNav'; // Import SideNav
+import { FaEdit, FaTrash, FaSearch, FaSave, FaTimes } from 'react-icons/fa';
+import SideNav from '../../../components/SideNav'; 
 import './accountManagement.css';
 
 const AccountManagement = () => {
@@ -19,7 +19,6 @@ const AccountManagement = () => {
   const userId = sessionStorage.getItem('userId');
   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-  // Redirect to login if no session
   useEffect(() => {
     if (!token || !userId) {
       navigate('/');
@@ -34,7 +33,6 @@ const AccountManagement = () => {
       .catch((error) => console.error('Error fetching user data:', error));
   }, [navigate, token, userId, apiUrl]);
 
-  // Fetch users from backend
   const fetchUsers = useCallback(() => {
     axios
       .get(`${apiUrl}/users`, {
@@ -48,12 +46,11 @@ const AccountManagement = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Handle input changes
   const handleChange = (e, field, setter, data) => {
     setter({ ...data, [field]: e.target.value });
   };
 
-  // Save edited user
+  // Save edit
   const saveEdit = () => {
     axios
       .put(`${apiUrl}/users/${editingId}`, editData, {
@@ -66,7 +63,7 @@ const AccountManagement = () => {
       .catch((err) => console.error('Error updating user:', err));
   };
 
-  // Delete user
+  // Delete 
   const deleteUser = (id) => {
     axios
       .delete(`${apiUrl}/users/${id}`, {
@@ -76,7 +73,7 @@ const AccountManagement = () => {
       .catch((err) => console.error('Error deleting user:', err));
   };
 
-  // Filter users
+  // Filter 
   const filteredUsers = users.filter((u) => {
     const searchLower = searchTerm.toLowerCase();
     const roleMatches = roleFilter ? u.role === roleFilter : true;
@@ -90,40 +87,43 @@ const AccountManagement = () => {
 
   return (
     <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}> 
-      <SideNav user={user} /> {/* Add SideNav */}
+      <SideNav user={user} /> 
 
       <div className="content" style={{ height: "50vh" }}> 
-        <h2 className="fw-light">Account Management</h2>
-        
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="d-flex">
-            <div className="input-group me-2">
-              <FaSearch className="input-group-text" />
-              <input
-                type="text"
-                placeholder="Search"
-                className="form-control"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+      <h2 className="dashboard-title"> USER MANAGEMENT </h2>
+      <div className="d-flex align-items-center gap-3 mb-3">
+      {/* Search Bar */}
+      <div className="input-group search-container">
+        <span className="input-group-text">
+          <FaSearch />
+        </span>
+        <input
+          type="text"
+          placeholder="Search Name"
+          className="form-control"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
-            <select
-              className="form-select"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="">All Roles</option>
-              <option value="employee">Employee</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
+      {/* Role Filter Dropdown */}
+      <select
+        className="form-select role-filter"
+        value={roleFilter}
+        onChange={(e) => setRoleFilter(e.target.value)}
+      >
+        <option value="">All Roles</option>
+        <option value="employee">Employee</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="admin">Admin</option>
+      </select>
 
-          <button className="btn btn-success" onClick={() => setShowPopup(true)}>
-            <FaPlus className="me-1" /> Add User
-          </button>
-        </div>
+      {/* Add Button */}
+      <button className="custom-add-btn" onClick={() => setShowPopup(true)}>
+        +
+      </button>
+    </div>
+
 
         <div className="table-responsive">
           <table className="table table-bordered table-hover">

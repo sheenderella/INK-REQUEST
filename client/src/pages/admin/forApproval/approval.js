@@ -3,12 +3,14 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaCheck, FaTimes } from 'react-icons/fa';
+import SideNav from '../../../components/SideNav';
 
 const RequestApprovalTable = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
+  const [user, setUser] = useState(null);
   const [message, setMessage] = useState('');
-
+  
   useEffect(() => {
     const token = sessionStorage.getItem('authToken');
     const userId = sessionStorage.getItem('userId');
@@ -19,7 +21,13 @@ const RequestApprovalTable = () => {
       return;
     }
 
-    // Fetch requests that are approved by the supervisor
+    axios
+      .get(`http://localhost:8000/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => setUser(response.data))
+      .catch((error) => console.error('Error fetching user data:', error));
+
     const fetchRequests = async () => {
       try {
         const response = await axios.get('http://localhost:8000/api/ink/supervisor/requests', {
@@ -27,7 +35,7 @@ const RequestApprovalTable = () => {
             Authorization: `Bearer ${token}`,
           }
         });
-        setRequests(response.data); // Set the fetched requests
+        setRequests(response.data);
       } catch (error) {
         setMessage('Failed to fetch requests.');
         console.error('Error fetching requests:', error);
@@ -37,7 +45,6 @@ const RequestApprovalTable = () => {
     fetchRequests();
   }, [navigate]);
 
-  // Approve a request
   const handleApprove = async (requestId) => {
     try {
       await axios.put(`http://localhost:8000/api/ink/request/approve/${requestId}`, null, {
@@ -56,7 +63,6 @@ const RequestApprovalTable = () => {
     }
   };
 
-  // Reject a request
   const handleReject = async (requestId) => {
     try {
       await axios.put(`http://localhost:8000/api/ink/request/reject/${requestId}`, null, {
@@ -76,11 +82,13 @@ const RequestApprovalTable = () => {
   };
 
   return (
-    <div className="container">
-      <h2 className="mt-4 text-center">Approved Ink Request Table</h2>
-      {message && <p className="alert alert-info">{message}</p>}
+    <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}> 
+      <SideNav user={user} />
+  
+      <div className="content" style={{ height: "50vh" }}> 
+        <h2 className="dashboard-title">DASHBOARD</h2>
 
-      <div className="table-responsive">
+        <div className="table-responsive">
         <table className="table table-bordered table-striped mt-3 text-center">
           <thead>
             <tr>
@@ -138,6 +146,7 @@ const RequestApprovalTable = () => {
           </tbody>
         </table>
       </div>
+     </div>
     </div>
   );
 };
