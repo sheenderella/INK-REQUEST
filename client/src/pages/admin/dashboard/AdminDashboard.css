@@ -1,0 +1,33 @@
+body, html {
+  background-color: #f7f7f7;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  font-weight: 300;
+}
+
+/* Content Section */
+.content {
+  height: 50vh !important; 
+  display: flex; 
+  flex-direction: column; 
+  background-color: #f7f7f7 !important;
+  border-radius: 15px;
+  padding: 20px; 
+  overflow: auto; 
+}
+
+.dashboard-title {
+  font-weight: bolder !important;
+  margin-top: 30px; 
+  color: rgb(34, 34, 34);
+  font-family: 'Arial', sans-serif;
+  font-weight: 300;
+}
+
+/* Dashboard Cards */
+.card {
+  background-color: rgb(34, 34, 34) !important;  text-align: center;
+  padding: 20px;
+  border-radius: 10px;
+  min-width: 180px;
+}

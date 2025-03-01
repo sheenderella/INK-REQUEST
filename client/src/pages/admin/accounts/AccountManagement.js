@@ -1,120 +1,117 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes 
-} from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes } from 'react-icons/fa';
+import SideNav from '../../../components/SideNav'; // Import SideNav
 import './accountManagement.css';
 
 const AccountManagement = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [showPopup, setShowPopup] = useState(false);
-  const [newUser, setNewUser] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    role: 'employee',
-    department: ''
-  });
+  const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('authToken');
+  const userId = sessionStorage.getItem('userId');
   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+  // Redirect to login if no session
+  useEffect(() => {
+    if (!token || !userId) {
+      navigate('/');
+      return;
+    }
+
+    axios
+      .get(`${apiUrl}/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((response) => setUser(response.data))
+      .catch((error) => console.error('Error fetching user data:', error));
+  }, [navigate, token, userId, apiUrl]);
 
   // Fetch users from backend
   const fetchUsers = useCallback(() => {
-    axios.get(`${apiUrl}/users`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => setUsers(res.data))
-      .catch(err => console.error('Error fetching users:', err));
+    axios
+      .get(`${apiUrl}/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setUsers(res.data))
+      .catch((err) => console.error('Error fetching users:', err));
   }, [token, apiUrl]);
 
-  // Fetch users on component mount
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Handle form field changes
+  // Handle input changes
   const handleChange = (e, field, setter, data) => {
     setter({ ...data, [field]: e.target.value });
   };
 
   // Save edited user
   const saveEdit = () => {
-    axios.put(`${apiUrl}/users/${editingId}`, editData, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    axios
+      .put(`${apiUrl}/users/${editingId}`, editData, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then(() => {
         fetchUsers();
         setEditingId(null);
       })
-      .catch(err => console.error('Error updating user:', err));
+      .catch((err) => console.error('Error updating user:', err));
   };
 
   // Delete user
   const deleteUser = (id) => {
-    axios.delete(`${apiUrl}/users/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(() => fetchUsers())
-      .catch(err => console.error('Error deleting user:', err));
-  };
-
-  // Save a new user (without username and password field)
-  const saveNew = () => {
-    axios.post(`${apiUrl}/register`, newUser, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(() => {
-        fetchUsers();
-        setNewUser({
-          first_name: '',
-          last_name: '',
-          email: '',
-          role: 'employee',
-          department: ''
-        });
-        setShowPopup(false);
+    axios
+      .delete(`${apiUrl}/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch(err => console.error('Error creating user:', err));
+      .then(() => fetchUsers())
+      .catch((err) => console.error('Error deleting user:', err));
   };
 
-  // Filter users based on search term (first name, last name, username, or email)
-  const filteredUsers = users.filter(u => {
+  // Filter users
+  const filteredUsers = users.filter((u) => {
     const searchLower = searchTerm.toLowerCase();
     const roleMatches = roleFilter ? u.role === roleFilter : true;
     return (
       (u.first_name.toLowerCase().includes(searchLower) ||
-      u.last_name.toLowerCase().includes(searchLower) ||
-      u.username.toLowerCase().includes(searchLower) ||
-      u.email.toLowerCase().includes(searchLower)) && roleMatches
+        u.last_name.toLowerCase().includes(searchLower) ||
+        u.email.toLowerCase().includes(searchLower)) &&
+      roleMatches
     );
   });
 
   return (
-    <div className="am-wrapper">
-      <div className="am-card">
-        <h2 className="am-title">Account Management</h2>
-        <div className="am-toolbar">
-          <div className="am-input-group am-search">
-            <FaSearch className="am-icon" />
-            <input 
-              type="text" 
-              placeholder="Search" 
-              className="am-input" 
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
+    <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}> 
+      <SideNav user={user} /> {/* Add SideNav */}
 
-          <div className="am-input-group am-filter">
-            <select 
-              className="am-input" 
-              value={roleFilter} 
-              onChange={e => setRoleFilter(e.target.value)}
+      <div className="content" style={{ height: "50vh" }}> 
+        <h2 className="fw-light">Account Management</h2>
+        
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="d-flex">
+            <div className="input-group me-2">
+              <FaSearch className="input-group-text" />
+              <input
+                type="text"
+                placeholder="Search"
+                className="form-control"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <select
+              className="form-select"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
             >
               <option value="">All Roles</option>
               <option value="employee">Employee</option>
@@ -123,108 +120,63 @@ const AccountManagement = () => {
             </select>
           </div>
 
-          <button className="am-btn am-btn-success" onClick={() => setShowPopup(true)}>
-            <FaPlus className="am-icon" />
+          <button className="btn btn-success" onClick={() => setShowPopup(true)}>
+            <FaPlus className="me-1" /> Add User
           </button>
         </div>
 
-        <div className="am-table-responsive">
-          <table className="am-table">
+        <div className="table-responsive">
+          <table className="table table-bordered table-hover">
             <thead>
               <tr>
                 <th>First Name</th>
                 <th>Last Name</th>
-                <th>Username</th>
                 <th>Email</th>
-                <th>Password</th>
                 <th>Role</th>
                 <th>Department</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map(user => (
-                <tr key={user._id} className={editingId === user._id ? 'am-editing' : ''}>
-                  {['first_name', 'last_name', 'username', 'email'].map(field => (
+              {filteredUsers.map((user) => (
+                <tr key={user._id}>
+                  {['first_name', 'last_name', 'email', 'role', 'department'].map((field) => (
                     <td key={field}>
                       {editingId === user._id ? (
                         <input
-                          type={field === 'email' ? 'email' : 'text'}
+                          type="text"
                           value={editData[field] || ''}
-                          onChange={e => handleChange(e, field, setEditData, editData)}
-                          className="am-input"
+                          onChange={(e) => handleChange(e, field, setEditData, editData)}
+                          className="form-control"
                         />
                       ) : (
                         user[field]
                       )}
                     </td>
                   ))}
-                  
-                  {/* Always show password field, but not the actual password when editing */}
-                  <td>
-                    {editingId === user._id ? (
-                      <input
-                        type="password"
-                        placeholder="New Password"
-                        value={editData.password || ''}
-                        onChange={e => handleChange(e, 'password', setEditData, editData)}
-                        className="am-input"
-                      />
-                    ) : (
-                      '********'
-                    )}
-                  </td>
-
-                  <td>
-                    {editingId === user._id ? (
-                      <select 
-                        value={editData.role || ''} 
-                        onChange={e => handleChange(e, 'role', setEditData, editData)}
-                        className="am-input"
-                      >
-                        <option value="employee">Employee</option>
-                        <option value="supervisor">Supervisor</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    ) : (
-                      user.role
-                    )}
-                  </td>
-                  <td>
-                    {editingId === user._id ? (
-                      <input
-                        type="text"
-                        value={editData.department || ''}
-                        onChange={e => handleChange(e, 'department', setEditData, editData)}
-                        className="am-input"
-                      />
-                    ) : (
-                      user.department
-                    )}
-                  </td>
                   <td>
                     {editingId === user._id ? (
                       <>
-                        <button className="am-btn am-btn-success" onClick={saveEdit}>
-                          <FaSave className="am-icon" />
+                        <button className="btn btn-success me-2" onClick={saveEdit}>
+                          <FaSave /> Save
                         </button>
-                        <button className="am-btn am-btn-secondary" onClick={() => setEditingId(null)}>
-                          <FaTimes className="am-icon" />
+                        <button className="btn btn-secondary" onClick={() => setEditingId(null)}>
+                          <FaTimes /> Cancel
                         </button>
                       </>
                     ) : (
                       <>
-                        <button 
-                          className="am-btn am-btn-primary" 
+                        <button
+                          className="btn btn-primary me-2"
                           onClick={() => {
                             setEditingId(user._id);
-                            setEditData({ ...user, password: '' });
+                            setEditData({ ...user });
                           }}
                         >
-                          <FaEdit className="am-icon" />
+                          <FaEdit /> Edit
                         </button>
-                        <button className="am-btn am-btn-danger" onClick={() => deleteUser(user._id)}>
-                          <FaTrash className="am-icon" />
+                        <button className="btn btn-danger" onClick={() => deleteUser(user._id)}>
+                          <FaTrash /> Delete
                         </button>
                       </>
                     )}
@@ -237,34 +189,38 @@ const AccountManagement = () => {
       </div>
 
       {showPopup && (
-        <div className="am-popup-overlay">
-          <div className="am-popup">
+        <div className="popup-overlay">
+          <div className="popup">
             <h3>Add New User</h3>
-            {['first_name','last_name','email','department'].map(field => (
-              <div className="am-form-group" key={field}>
-                <label>{field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</label>
+            {['first_name', 'last_name', 'email', 'department'].map((field) => (
+              <div className="mb-2" key={field}>
+                <label>{field.replace('_', ' ')}</label>
                 <input
-                  type={field === 'email' ? 'email' : 'text'}
-                  value={newUser[field] || ''}
-                  onChange={e => handleChange(e, field, setNewUser, newUser)}
-                  className="am-input"
+                  type="text"
+                  value={editData[field] || ''}
+                  onChange={(e) => handleChange(e, field, setEditData, editData)}
+                  className="form-control"
                 />
               </div>
             ))}
-            <div className="am-form-group">
+            <div className="mb-2">
               <label>Role</label>
-              <select value={newUser.role} onChange={e => handleChange(e, 'role', setNewUser, newUser)} className="am-input">
+              <select
+                value={editData.role || 'employee'}
+                onChange={(e) => handleChange(e, 'role', setEditData, editData)}
+                className="form-select"
+              >
                 <option value="employee">Employee</option>
                 <option value="supervisor">Supervisor</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div className="am-popup-actions">
-              <button className="am-btn am-btn-success" onClick={saveNew}>
-                <FaSave className="am-icon" /> Save
+            <div className="d-flex justify-content-end">
+              <button className="btn btn-success me-2" onClick={saveEdit}>
+                <FaSave /> Save
               </button>
-              <button className="am-btn am-btn-secondary" onClick={() => setShowPopup(false)}>
-                <FaTimes className="am-icon" /> Cancel
+              <button className="btn btn-secondary" onClick={() => setShowPopup(false)}>
+                <FaTimes /> Cancel
               </button>
             </div>
           </div>

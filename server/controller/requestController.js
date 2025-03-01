@@ -80,10 +80,19 @@ export const submitInkRequest = async (req, res) => {
 
 export const getPendingSupervisorRequests = async (req, res) => {
   try {
+    // Assume req.user.department holds the supervisor's department.
+    const supervisorDept = req.user.department;
+
     const pendingRequests = await InkRequest.find({ supervisor_approval: 'Pending' })
       .populate('ink')
       .populate('requested_by');
-    res.status(200).json(pendingRequests);
+
+    // Filter the requests to only include those from the same department.
+    const filteredRequests = pendingRequests.filter(request => {
+      return request.requested_by.department === supervisorDept;
+    });
+
+    res.status(200).json(filteredRequests);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -93,13 +102,21 @@ export const supervisorApproval = async (req, res) => {
   try {
     const { requestId, action } = req.body;
     const supervisorId = req.user.id;
+    const supervisorDept = req.user.department;
 
-    const request = await InkRequest.findById(requestId);
+    // Populate requested_by to check the department of the requestor.
+    const request = await InkRequest.findById(requestId).populate('requested_by');
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
+
+    // Check if the requestor's department matches the supervisor's department.
+    if (request.requested_by.department !== supervisorDept) {
+      return res.status(403).json({ error: 'You are not authorized to approve requests outside your department.' });
+    }
+
     if (request.supervisor_approval !== 'Pending') {
-      return res.status(400).json({ error: 'Request already processed by supervisor' });
+      return res.status(400).json({ error: 'Request already processed by supervisor.' });
     }
 
     request.supervisor_approval = action === 'Approve' ? 'Approved' : 'Rejected';
@@ -113,6 +130,7 @@ export const supervisorApproval = async (req, res) => {
     await request.save();
     res.status(200).json(request);
   } catch (error) {
+    console.error('Error in supervisor approval:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -333,3 +351,5 @@ export const adminApprovalAndIssuance = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+

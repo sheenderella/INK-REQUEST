@@ -51,11 +51,6 @@ const __dirname = path.dirname(__filename);
 // Serve static files from the React app's build directory
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// Catch-all route to serve React's index.html for any route not matching API endpoints
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
-
 // Listen on all network interfaces
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
