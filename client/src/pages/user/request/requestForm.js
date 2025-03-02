@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './requestForm.css';
 
 
-const RequestForm = () => {
+const RequestForm = ({ setShowModal }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     printerModel: '',
@@ -74,38 +74,36 @@ const RequestForm = () => {
   
     if (!token || !userId) {
       setMessage('No token or user session found. Please login again.');
-      navigate('/'); 
       return;
     }
   
-    const payload = {
+    const payloads = form.color.map((color) => ({
       printerId: form.printerModel,
-      ink_type: form.color[0] || 'black', 
-      userId: userId  
-    };
+      ink_type: color,
+      userId: userId
+    }));
   
     try {
-      const response = await axios.post('http://localhost:8000/api/ink/request', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
+      const responses = await Promise.all(
+        payloads.map((payload) =>
+          axios.post('http://localhost:8000/api/ink/request', payload, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
   
       setMessage('Ink request submitted successfully!');
-      console.log("Response:", response.data);
+      console.log("Responses:", responses);
   
-      navigate(-1);  
+      // Wait for the user to see the message, then close the modal
+      setTimeout(() => {
+        setShowModal(false); // If using modal, close it instead of navigating
+      }, 1500);
     } catch (error) {
-      if (error.response) {
-        setMessage(`Failed to submit the request: ${error.response.data.message || error.response.statusText}`);
-        console.error("Error Response:", error.response);
-      } else if (error.request) {
-        setMessage('No response from the server. Please try again later.');
-        console.error("No response received:", error.request);
-      } else {
-        setMessage(`Failed to submit the request. Error: ${error.message}`);
-        console.error("Error:", error);
-      }
+      console.error("Error submitting request:", error);
+      setMessage(
+        error.response?.data?.message || 'Failed to submit the request.'
+      );
     }
   };
   
@@ -191,6 +189,8 @@ const RequestForm = () => {
           SUBMIT
         </button>
       </div>
+
+      
     </form>
   </div>
 )};

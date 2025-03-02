@@ -35,15 +35,22 @@
   
   /* Custom Checkbox */
   .custom-checkbox {
-    accent-color: #000000; /* Supported in modern browsers */
+    accent-color: #000000 !important; /* Supported in modern browsers */
   }
   
-  /* Custom Button */
-  .custom-button {
-    background-color: #1a1a1a;  /* Bootstrap primary color */
-    border-color: #1a1a1a;
-    color: #ffffff;
-  }
+/* Custom Button */
+.custom-button {
+  background-color: #1a1a1a; /* Dark color */
+  border-color: #1a1a1a;
+  color: #ffffff;
+  width: 100%; /* Ensures button stretches to fit the container */
+  max-width: 400px; /* Prevents it from being too wide */
+  padding: 10px 15px; /* Ensures good padding */
+  font-size: 16px; /* Readable text size */
+  display: block;
+  margin: 0 auto; /* Centers within the parent container */
+}
+
   
   .custom-button:hover {
     background-color: #3d3d3d;

@@ -23,22 +23,29 @@ export const getUserRequests = async (req, res) => {
   }
 };
 
-
 export const submitInkRequest = async (req, res) => {
   try {
-    const { printerId, ink_type, userId } = req.body; 
-    const userIdFromToken = req.user.id; 
+    const { printerId, ink_type, userId } = req.body;
+    const userIdFromToken = req.user?.userId || req.user?.id; // Ensure ID is fetched correctly
+    const userRole = req.user?.role?.toLowerCase(); // Make role case-insensitive
 
     console.log("Received Printer ID:", printerId);
     console.log("Received Ink Type:", ink_type);
     console.log("Received User ID from Frontend:", userId);
     console.log("User ID from Token:", userIdFromToken);
+    console.log("User Role:", userRole);
 
-   
+    // If no user session, return unauthorized
+    if (!userIdFromToken) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token or session expired.' });
+    }
+
+    // Ink type is required
     if (!ink_type) {
       return res.status(400).json({ error: 'Ink type is required. Please select an ink type.' });
     }
 
+    // Fetch printer details
     const printer = await PrinterModel.findById(printerId).populate('compatible_inks');
     if (!printer) {
       return res.status(404).json({ error: 'Printer not found' });
@@ -48,31 +55,51 @@ export const submitInkRequest = async (req, res) => {
     console.log("Compatible Inks:", printer.compatible_inks);
 
     const selectedInkModel = printer.compatible_inks[0];
-
     if (!selectedInkModel) {
       return res.status(400).json({ error: 'No compatible ink model found for the selected printer.' });
     }
 
+    // Check inventory
     const inventoryRecord = await Inventory.findOne({
       ink_model: selectedInkModel._id,
       quantity: { $gt: 0 }
     });
+
     if (!inventoryRecord) {
       return res.status(400).json({ error: 'No available inventory for the selected ink model.' });
     }
 
+    // ✅ Set approval status based on role
+    let supervisorApproval = "Pending";
+    let adminApproval = "Pending";
+
+    if (userRole === "supervisor") {
+      supervisorApproval = "Approved"; // Auto-approve for supervisor
+    } else if (userRole === "admin") {
+      supervisorApproval = "Approved"; // Auto-approve for admin
+      adminApproval = "Pending"; // Admin still needs to approve
+    }
+
+    // ✅ Create a new ink request
     const newRequest = new InkRequest({
       ink: inventoryRecord._id,
-      requested_by: userId,  
+      requested_by: userIdFromToken || userId, // Use the token ID or fallback to provided userId
       quantity_requested: 1,
-      ink_type: ink_type || "black"  
+      ink_type: ink_type,
+      supervisor_approval: supervisorApproval,
+      admin_approval: adminApproval,
+      status: "Pending",
+      consumption_status: "Not Processed",
+      request_date: new Date()
     });
 
     const savedRequest = await newRequest.save();
+    console.log("✅ Request successfully saved:", savedRequest);
+
     res.status(201).json(savedRequest);
 
   } catch (error) {
-    console.error('Error in submitting ink request:', error);
+    console.error('❌ Error in submitting ink request:', error);
     res.status(500).json({ error: error.message });
   }
 };

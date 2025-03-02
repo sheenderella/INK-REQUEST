@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaSignOutAlt, FaBoxOpen, FaUsers, FaClipboardCheck, FaTachometerAlt, FaKey } from "react-icons/fa";
+import { FaSignOutAlt, FaBoxOpen, FaUsers, FaCheck, FaTachometerAlt, FaKey } from "react-icons/fa";
 import axios from "axios";
 import "./SideNav.css";
 
@@ -31,7 +31,7 @@ const SideNav = ({ user }) => {
         {[
           { path: "/admin", label: "dashboard", icon: <FaTachometerAlt /> },
           { path: "/inventory", label: "inventory", icon: <FaBoxOpen /> },
-          { path: "/for-approval", label: "ink requests", icon: <FaClipboardCheck /> },
+          { path: "/for-approval", label: "ink requests", icon: <FaCheck /> },
           { path: "/account-management", label: "user management", icon: <FaUsers /> },
           { path: "/change-password", label: "change password", icon: <FaKey /> },
         ].map(({ path, label, icon }) => (
@@ -45,18 +45,25 @@ const SideNav = ({ user }) => {
         ))}
       </nav>
 
-      {user ? (
-        <div className="text-left">
-          <p className="mb-1 fw-light">{user.first_name} {user.last_name}</p>
-          <small className="text-light fst-italic">{user.role}</small>
-        </div>
-      ) : (
-        <p className="text-left">Loading...</p>
-      )}
+      {/* Grouped container for user info and logout */}
+      <div className="sidebar-bottom">
+        {user ? (
+          <div className="user-info text-left">
+            <p className="mb-1 fw-light">
+              {user.first_name} {user.last_name}
+            </p>
+            <small className="text-light fst-italic">
+              {user.role ? user.role : user.username}
+            </small>
+          </div>
+        ) : (
+          <p className="user-info text-left">Loading...</p>
+        )}
 
-      <button className="btn btn-outline-light py-2 w-100" onClick={handleLogout}>
-        <FaSignOutAlt className="me-2" /> Logout
-      </button>
+        <button className="btn btn-outline-light py-2 w-100" onClick={handleLogout}>
+          <FaSignOutAlt className="me-2" /> Logout
+        </button>
+      </div>
     </div>
   );
 };

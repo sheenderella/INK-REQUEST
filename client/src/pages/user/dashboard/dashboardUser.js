@@ -1,61 +1,91 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { FaSignOutAlt, FaClipboardList, FaSearch } from 'react-icons/fa';
-import './dashboardUser.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
+import UserSideNav from "../../../components/UserSideNav.js"; // Ensure correct extension
+import "./dashboardUser.css";
+import RequestForm from "../../user/request/requestForm";
 
 const DashboardUser = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
 
-  // Check if the token and userId exist on initial load
+  // Fetch user details using the authToken and userId from sessionStorage
   useEffect(() => {
-    const token = sessionStorage.getItem('authToken');  
-    const userId = sessionStorage.getItem('userId');    
-    
-    if (!token || !userId) {
-      navigate('/'); 
+    const storedToken = sessionStorage.getItem("authToken");
+    const storedUserId = sessionStorage.getItem("userId");
+
+    if (!storedToken || !storedUserId) {
+      navigate("/");
+      return;
     }
+
+    setToken(storedToken);
+    setUserId(storedUserId);
+
+    axios
+      .get(`http://localhost:8000/api/users/${storedUserId}`, {
+        headers: { Authorization: `Bearer ${storedToken}` },
+        timeout: 5000,
+      })
+      .then((response) => {
+        setUser(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching user data:", error);
+      });
   }, [navigate]);
 
-  // Navigate to the request form page
-  const goToRequestForm = () => {
-    navigate('/request');
-  };
+  const handleLogout = async () => {
+    if (!token) return;
 
-  // Navigate to the track request page
-  const goToTrackRequest = () => {
-    navigate('/track-request');
-  };
+    try {
+      await axios.post("http://localhost:8000/api/logout", {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error("Error during logout:", error.response?.data || error.message);
+    }
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('authToken'); 
-    sessionStorage.removeItem('userId');    
-    navigate('/'); 
+    sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("userId");
+    navigate("/");
   };
-
-  // Get userId from sessionStorage for displaying
-  const userId = sessionStorage.getItem('userId');  
 
   return (
-    <div className="dashboard-wrapper">
-      <div className="dashboard-header">
-        <h2 className="dashboard-title">INK REQUEST</h2>
-        {/* <p>User ID: {userId}</p> Display userId */}
-        <button className="logout-button" onClick={handleLogout}>
-          <FaSignOutAlt size={20} />
-        </button>
+    <div className="dashboard-container d-flex" style={{ height: "100vh", alignItems: "center", position: "relative", zIndex: 1 }}>
+      {/* Sidebar */}
+      <UserSideNav user={user} handleLogout={handleLogout} />
+
+      {/* Main Content */}
+      <div className="content" style={{ height: "50vh" }}>
+        <h2 className="dashboard-title">USER DASHBOARD</h2>
+
+        <div className="d-flex gap-4 mt-4">
+          <button
+            className="request mt-2 rounded flex flex-col items-center justify-center gap-1"
+            onClick={() => setShowModal(true)}
+          >
+            <i className="fas fa-plus text-lg"></i>
+            <span>Request Ink</span>
+          </button>
+        </div>
       </div>
 
-      <div className="dashboard-buttons">
-        <button className="dashboard-button" onClick={goToRequestForm}>
-          <FaClipboardList size={30} />
-          <div className="button-text">Request Form</div>
-        </button>
-        <button className="dashboard-button" onClick={goToTrackRequest}>
-          <FaSearch size={30} />
-          <div className="button-text">Track My Request</div>
-        </button>
-      </div>
+      {showModal && token && userId && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="close-btn" onClick={() => setShowModal(false)}>
+              &times;
+            </button>
+            {/* Ensure token and userId are passed properly */}
+            <RequestForm token={token} userId={userId} setShowModal={setShowModal} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

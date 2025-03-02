@@ -11,19 +11,24 @@ const AdminDashboard = () => {
   const [pendingRequests, setPendingRequests] = useState(0);
   const [user, setUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
-    const userId = sessionStorage.getItem("userId");
+    const storedToken = sessionStorage.getItem("authToken");
+    const storedUserId = sessionStorage.getItem("userId");
 
-    if (!token || !userId) {
+    if (!storedToken || !storedUserId) {
       navigate("/");
       return;
     }
 
+    setToken(storedToken);
+    setUserId(storedUserId);
+
     axios
-      .get(`http://localhost:8000/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      .get(`http://localhost:8000/api/users/${storedUserId}`, {
+        headers: { Authorization: `Bearer ${storedToken}` },
         timeout: 5000,
       })
       .then((response) => setUser(response.data))
@@ -33,7 +38,6 @@ const AdminDashboard = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("authToken");
     if (!token) return;
 
     axios
@@ -46,7 +50,7 @@ const AdminDashboard = () => {
         console.error("Error fetching pending requests:", error);
         setPendingRequests(0);
       });
-  }, []);
+  }, [token]);
 
   return (
     <div className="d-flex" style={{ height: "100vh", alignItems: "center", position: "relative", zIndex: 1 }}>
@@ -71,14 +75,14 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {showModal && (
+      {showModal && token && userId && (
         <div className="modal-overlay">
           <div className="modal-content">
             <button className="close-btn" onClick={() => setShowModal(false)}>
               &times;
             </button>
-            <RequestForm />
-          </div>
+            <RequestForm token={token} userId={userId} setShowModal={setShowModal} />
+            </div>
         </div>
       )}
     </div>
