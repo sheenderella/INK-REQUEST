@@ -1,0 +1,58 @@
+.custom-title {
+  color: #000000;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.custom-text {
+  color: #000000; 
+  font-size: 1rem;
+  font-style: italic;
+}
+
+
+.custom-form-group {
+  max-width: 400px; 
+  margin-left: 0;   
+  text-align: left;
+}
+
+/* Labels */
+.custom-label {
+  color: #000000; /* Black text */
+  font-weight: normal;
+}
+
+.field-label {
+  font-weight: bold;
+  color: #000000; /* Black text */
+}
+
+/* Custom Select */
+.custom-select {
+  background-color: #ffffff; /* White background */
+  color: #000000; /* Black text */
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+  accent-color: #000000 !important; /* Supported in modern browsers */
+}
+
+/* Custom Button */
+.custom-button {
+background-color: #1a1a1a; /* Dark color */
+border-color: #1a1a1a;
+color: #ffffff;
+width: 100%; /* Ensures button stretches to fit the container */
+max-width: 400px; /* Prevents it from being too wide */
+padding: 10px 15px; /* Ensures good padding */
+font-size: 16px; /* Readable text size */
+display: block;
+margin: 0 auto; /* Centers within the parent container */
+}
+
+
+.custom-button:hover {
+  background-color: #3d3d3d;
+  border-color: #3d3d3d;
+}

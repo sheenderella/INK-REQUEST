@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { 
   FaSignOutAlt, 
   FaTachometerAlt, 
-  FaClipboardList, 
   FaSearch, 
   FaCheck, 
   FaKey 

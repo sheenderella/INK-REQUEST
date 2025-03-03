@@ -1,17 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import {
-  FaEdit,
-  FaTrash,
-  FaPlus,
-  FaSearch,
-  FaSave,
-  FaTimes
-} from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSave, FaTimes} from 'react-icons/fa';
 import './inventory.css';
 import SideNav from '../../../components/SideNav';
 import PaginationSlider from '../../../components/PaginationSlider';
+
 
 const InventoryManagement = () => {
   const [inventory, setInventory] = useState([]);
@@ -128,19 +122,13 @@ const InventoryManagement = () => {
   };
 
   const filteredInventory = inventory.filter(item => {
-    let inkModelStr = '';
-    if (item.ink_model) {
-      if (typeof item.ink_model === 'string') {
-        inkModelStr = item.ink_model;
-      } else if (typeof item.ink_model === 'object' && item.ink_model.ink_name) {
-        inkModelStr = item.ink_model.ink_name;
-      }
-    }
+    const inkModelStr = item.ink_model ? item.ink_model.ink_name || '' : '';
     return (
       inkModelStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.color && item.color.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
+  
 
   // Function to render a full table for a given page of data
   const renderTablePage = (pageData) => (
@@ -172,9 +160,7 @@ const InventoryManagement = () => {
                   ))}
                 </select>
               ) : (
-                typeof item.ink_model === 'object'
-                  ? item.ink_model.ink_name
-                  : item.ink_model
+                item.ink_model && typeof item.ink_model === 'object' ? item.ink_model.ink_name : 'Unknown'
               )}
             </td>
             <td>
@@ -264,6 +250,26 @@ const InventoryManagement = () => {
       <SideNav user={user} />
       <div className="content" style={{ height: "50vh" }}>
         <h2 className="dashboard-title"> inventory </h2>
+      
+   {/* Navigation Buttons */}
+   <div className="w-64 h-64 flex flex-col items-start">
+          <button
+            className="request mt-2 rounded flex flex-col items-center justify-center gap-1"
+            onClick={() => navigate('/PrinterModel')}
+          >
+            <i className="fas fa-plus text-lg"></i>
+            <span>Printer Model</span>
+          </button>
+
+          <button
+            className="request mt-2 rounded flex flex-col items-center justify-center gap-1"
+            onClick={() => navigate('/InkModel')}
+          >
+            <i className="fas fa-plus text-lg"></i>
+            <span>Ink Model</span>
+          </button>
+        </div>
+
         <div className="am-toolbar">
           <div className="am-input-group am-search">
             <input

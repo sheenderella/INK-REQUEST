@@ -9,7 +9,7 @@ const RequestApprovalTable = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [user, setUser] = useState(null);
-  const [message, setMessage] = useState('');
+  const [setMessage] = useState('');
   
   useEffect(() => {
     const token = sessionStorage.getItem('authToken');

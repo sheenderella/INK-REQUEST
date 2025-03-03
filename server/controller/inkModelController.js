@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import InkModel from '../model/inkModels.js';
+import Inventory from '../model/inventory.js';
 
 export const getAllInkModels = async (req, res) => {
   try {
@@ -78,12 +80,26 @@ export const updateInkModel = async (req, res) => {
 export const deleteInkModel = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // ✅ Validate ID format to prevent crashes
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid Ink Model ID' });
+    }
+    const isInkInUse = await Inventory.findOne({ ink_model: id });
+
+    if (isInkInUse) {
+      return res.status(400).json({ message: 'Cannot delete ink model, it is currently in use in the inventory.' });
+    }
+
     const deletedInkModel = await InkModel.findByIdAndDelete(id);
+
     if (!deletedInkModel) {
       return res.status(404).json({ message: 'Ink model not found' });
     }
+
     res.status(200).json({ message: 'Ink model deleted successfully' });
   } catch (error) {
+    console.error("Error deleting ink model:", error);
     res.status(500).json({ error: error.message });
   }
 };

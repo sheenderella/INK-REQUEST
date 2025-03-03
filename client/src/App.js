@@ -13,6 +13,8 @@ import Inventory from "./pages/admin/inventory/inventory";
 import AccountManagement from "./pages/admin/accounts/AccountManagement";
 import ForApproval from "./pages/admin/forApproval/approval";
 import PrinterModel from "./pages/admin/inventory/PrinterModel";
+import InkModel from "./pages/admin/inventory/InkModel";
+
 
 
 
@@ -84,6 +86,15 @@ function App() {
       element: (
         <PrivateRoute>
           <PrinterModel />
+        </PrivateRoute>
+      ) 
+    },
+
+    { 
+      path: "/InkModel", 
+      element: (
+        <PrivateRoute>
+          <InkModel />
         </PrivateRoute>
       ) 
     },
