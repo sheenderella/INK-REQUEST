@@ -7,7 +7,7 @@ const PrinterModelManagement = ({ showPopup, setShowPopup }) => {
   const [printerModels, setPrinterModels] = useState([]);
   const [newPrinterModel, setNewPrinterModel] = useState({
     printer_name: '',
-    compatible_inks: [] // Assume compatible inks will be an array of ink model ids
+    compatible_inks: [] 
   });
 
   const token = localStorage.getItem('token');

@@ -12,6 +12,10 @@ import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
 import Inventory from "./pages/admin/inventory/inventory";
 import AccountManagement from "./pages/admin/accounts/AccountManagement";
 import ForApproval from "./pages/admin/forApproval/approval";
+import PrinterModel from "./pages/admin/inventory/PrinterModel";
+
+
+
 
 // User Pages
 import DashboardUser from './pages/user/dashboard/dashboardUser';
@@ -65,6 +69,7 @@ function App() {
         </PrivateRoute>
       )
     },
+    
     { 
       path: "/inventory", 
       element: (
@@ -73,6 +78,16 @@ function App() {
         </PrivateRoute>
       ) 
     },
+
+    { 
+      path: "/PrinterModel", 
+      element: (
+        <PrivateRoute>
+          <PrinterModel />
+        </PrivateRoute>
+      ) 
+    },
+
     { 
       path: "/account-management", 
       element: (

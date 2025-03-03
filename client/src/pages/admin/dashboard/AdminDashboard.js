@@ -57,7 +57,7 @@ const AdminDashboard = () => {
       <SideNav user={user} />
 
       <div className="content" style={{ height: "50vh" }}>
-        <h2 className="dashboard-title">DASHBOARD</h2>
+        <h2 className="dashboard-title"> dashboard </h2>
 
         <div className="d-flex gap-4 mt-4">
           <div className="card bg-black text-white text-center p-4 rounded">

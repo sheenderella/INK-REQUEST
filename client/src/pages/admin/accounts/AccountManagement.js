@@ -90,7 +90,7 @@ const AccountManagement = () => {
       <SideNav user={user} /> 
 
       <div className="content" style={{ height: "50vh" }}> 
-      <h2 className="dashboard-title"> USER MANAGEMENT </h2>
+      <h2 className="dashboard-title"> user management </h2>
       <div className="d-flex align-items-center gap-3 mb-3">
       {/* Search Bar */}
       <div className="input-group search-container">

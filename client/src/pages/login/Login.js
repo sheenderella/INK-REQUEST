@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import logo from './logo.png'; 
+
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -66,17 +68,17 @@ const Login = () => {
       }}
     >
       <div className="card p-4 shadow-lg" style={{ width: '500px', border: 'none', borderRadius: '15px' }}>
-        <h2 className="text-center mb-4 text-white">Login</h2>
+        <h2 className="text-center mb-4 text-white">login</h2>
         
         {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label text-white text-start d-block">Username: </label>
+            <label className="form-label text-white text-start d-block">username: </label>
             <input
               type="text"
               className="form-control"
-              placeholder="Enter username"
+              placeholder="enter username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -84,12 +86,12 @@ const Login = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label text-white text-start d-block">Password: </label>
+            <label className="form-label text-white text-start d-block">password: </label>
             <div className="input-group">
               <input
                 type={showPassword ? 'text' : 'password'}
                 className="form-control"
-                placeholder="Enter password"
+                placeholder="enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -105,11 +107,29 @@ const Login = () => {
           </div>
 
           <button type="submit" className="btn btn-secondary w-100" disabled={loading}>
-            {loading ? "Logging in..." : "LOGIN"}
+            {loading ? "logging in..." : "LOGIN"}
           </button>
         </form>
       </div>
+
+      {/* Small logo in bottom left */}
+      <img
+        src={logo}
+        alt="Company Logo"
+        className="position-absolute"
+        style={{
+          bottom: "20px",
+          right: "20px",
+          width: "80px",
+          height: "auto",
+          opacity: 0.8,
+          transition: "opacity 0.3s ease-in-out"
+        }}
+      />
+
     </div>
+
+    
   );
 };
 

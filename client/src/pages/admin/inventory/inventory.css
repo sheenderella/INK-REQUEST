@@ -1,108 +1,163 @@
-/* Inventory Table Styling */
-.am-table-responsive {
-  overflow-x: auto;
+/* ===========================
+   Inventory Management Styles
+=========================== */
+
+/* Card and header */
+.am-card {
+  height: 90%;
+  width: 100%;;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+}
+
+.dashboard-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.am-toolbar {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.am-input-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-right: 10px; /* Adds some space between search and add button */
+}
+
+.am-input-group .am-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 16px;
+  color: #888;
+}
+
+.am-input-group input {
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* Buttons */
+.am-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.am-btn-success {
+  background-color: #28a745;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+}
+
+.am-btn-primary {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.am-btn-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+
+/* ===========================
+   Table Styles
+=========================== */
+
+.am-table-responsive {
+  overflow-x: auto;
+  overflow-y: auto;
+  margin-top: 15px;
 }
 
 .am-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #ffffff;
+}
+
+.am-table thead {
+  background-color: #f8f9fa;
 }
 
 .am-table th,
 .am-table td {
-  padding: 12px 15px;
+  border: 1px solid #dee2e6;
+  padding: 10px;
   text-align: left;
-  border-bottom: 1px solid #ddd;
 }
 
-.am-table thead {
-  background-color: #004085;
-  color: #ffffff;
+.am-table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
 }
 
-.am-table tbody tr:hover {
-  background-color: #f1f1f1;
+.am-table tbody tr.am-editing {
+  background-color: #fff3cd;
 }
 
-.am-table td {
-  font-size: 14px;
-  color: #333;
-}
+/* ===========================
+   Shop Popup (Add Inventory) Styles
+=========================== */
 
-/* Editing Row Highlight */
-.am-editing {
-  background-color: #e8f0fe;
-}
-
-/* Button Styling */
-.am-btn {
-  border: none;
-  padding: 8px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.am-btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.am-btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.am-btn-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-.am-btn-danger:hover {
-  background-color: #a71d2a;
-}
-
-.am-btn-success {
-  background-color: #28a745;
-  color: white;
-}
-
-.am-btn-success:hover {
-  background-color: #1d7d33;
-}
-
-.am-btn-secondary {
-  background-color: #6c757d;
-  color: white;
-}
-
-.am-btn-secondary:hover {
-  background-color: #565e64;
-}
-
-/* Search and Input Styling */
-.am-input-group {
+.am-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); /* Dim background */
   display: flex;
   align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Ensures popup is on top */
+}
+
+.am-popup {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+}
+
+/* Form Groups inside Popup */
+.am-form-group {
+  margin-bottom: 15px;
+}
+
+.am-form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.am-form-group input,
+.am-form-group select {
+  width: 100%;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  overflow: hidden;
-  background-color: white;
 }
 
-.am-input {
-  border: none;
-  padding: 8px;
-  flex-grow: 1;
-  outline: none;
+/* Popup action buttons */
+.am-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
-
-.am-icon {
-  margin: 0 8px;
-  color: #555;
-}
-

@@ -86,7 +86,7 @@ const RequestApprovalTable = () => {
       <SideNav user={user} />
   
       <div className="content" style={{ height: "50vh" }}> 
-        <h2 className="dashboard-title">DASHBOARD</h2>
+        <h2 className="dashboard-title">approve requests</h2>
 
         <div className="table-responsive">
         <table className="table table-bordered table-striped mt-3 text-center">
