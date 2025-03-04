@@ -5,7 +5,9 @@ import { FaEdit, FaTrash, FaPlus, FaSave, FaTimes} from 'react-icons/fa';
 import './inventory.css';
 import SideNav from '../../../components/SideNav';
 import PaginationSlider from '../../../components/PaginationSlider';
-
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { FaSearch } from 'react-icons/fa'; 
 
 const InventoryManagement = () => {
   const [inventory, setInventory] = useState([]);
@@ -34,25 +36,31 @@ const InventoryManagement = () => {
         timeout: 5000,
       })
       .then(response => setUser(response.data))
-      .catch(error => console.error("Error fetching user data:", error));
+      .catch(error => console.error("Error fetching user data:", error));      
   }, [navigate, token, userId]);
 
   const fetchInventory = useCallback(() => {
     axios.get('http://localhost:8000/api/inventory', {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(res => setInventory(res.data))
-      .catch(err => console.error('Error fetching inventory:', err));
+    .then(res => setInventory(res.data))
+    .catch(err => {
+      console.error('Error fetching inventory:', err);
+      toast.error('Error fetching inventory! Please try again.', { position: 'top-right' });
+    });
   }, [token]);
-
+  
   const fetchInkModels = useCallback(() => {
     axios.get('http://localhost:8000/api/inks/models', {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(res => setInkModels(res.data))
-      .catch(err => console.error('Error fetching ink models:', err));
+    .then(res => setInkModels(res.data))
+    .catch(err => {
+      console.error('Error fetching ink models:', err);
+      toast.error('Error fetching ink models! Please try again.', { position: 'top-right' });
+    });
   }, [token]);
-
+  
   useEffect(() => {
     fetchInventory();
     fetchInkModels();
@@ -72,7 +80,6 @@ const InventoryManagement = () => {
       return { ...prev, ink_model: newInkModel, color: newColor };
     });
   };
-
   const saveEdit = () => {
     const payload = {
       ink_model_id: editData.ink_model,
@@ -80,22 +87,33 @@ const InventoryManagement = () => {
       quantity: editData.quantity,
       volume: editData.volume
     };
+  
     axios.put(`http://localhost:8000/api/inventory/${editingId}`, payload, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(() => {
-        setEditingId(null);
-        fetchInventory();
-      })
-      .catch(err => console.error(err));
+    .then(() => {
+      setEditingId(null);
+      fetchInventory();
+      toast.success('Inventory updated successfully!', { position: 'top-right' });
+    })
+    .catch(err => {
+      console.error(err);
+      toast.error('Error updating inventory!', { position: 'top-right' });
+    });
   };
-
+  
   const deleteInventory = (id) => {
     axios.delete(`http://localhost:8000/api/inventory/${id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(() => fetchInventory())
-      .catch(err => console.error(err));
+    .then(() => {
+      fetchInventory();
+      toast.success('Deleted successfully!', { position: 'top-right' });
+    })
+    .catch(err => {
+      console.error(err);
+      toast.error('Error deleting inventory!', { position: 'top-right' });
+    });
   };
 
   const saveNew = () => {
@@ -108,12 +126,16 @@ const InventoryManagement = () => {
     axios.post('http://localhost:8000/api/inventory', payload, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(() => {
-        setNewInventory({ ink_model: '', color: '', quantity: '', volume: '' });
-        setShowPopup(false);
-        fetchInventory();
-      })
-      .catch(err => console.error(err));
+    .then(() => {
+      setNewInventory({ ink_model: '', color: '', quantity: '', volume: '' });
+      setShowPopup(false);
+      fetchInventory();
+      toast.success('New inventory added successfully!', { position: 'top-right' });
+    })
+    .catch(err => {
+      console.error(err);
+      toast.error('Error adding new inventory!', { position: 'top-right' });
+    });
   };
 
   const getColorsForInkModel = (inkModelId) => {
@@ -263,23 +285,35 @@ const InventoryManagement = () => {
 
           <button
             className="request mt-2 rounded flex flex-col items-center justify-center gap-1"
-            onClick={() => navigate('/InkModel')}
-          >
+            onClick={() => navigate('/InkModel')}>
             <i className="fas fa-plus text-lg"></i>
             <span>Ink Model</span>
           </button>
         </div>
 
         <div className="am-toolbar">
-          <div className="am-input-group am-search">
-            <input
-              type="text"
-              placeholder="Search by Ink Model or Color"
-              className="am-input"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-          </div>
+        <div className="am-input-group am-search" style={{ position: 'relative' }}>
+        <FaSearch 
+          className="search-icon" 
+          style={{ 
+            position: 'absolute', 
+            left: '10px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            color: '#888' 
+          }} 
+        />
+        <input
+          type="text"
+          placeholder="Search by Ink Model or Color"
+          className="am-input"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          style={{ paddingLeft: '35px' }} 
+        />
+      </div>
+
+
           <button className="am-btn am-btn-success" onClick={() => setShowPopup(true)}>
             <FaPlus className="am-icon" />
           </button>
@@ -291,6 +325,8 @@ const InventoryManagement = () => {
           renderPage={renderTablePage}
         />
       </div>
+      <ToastContainer />
+      
       {showPopup && (
         <div className="am-popup-overlay">
           <div className="am-popup">
