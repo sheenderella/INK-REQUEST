@@ -54,3 +54,10 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 // Listen on all network interfaces
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+
+
+app._router.stack.forEach((middleware) => {
+  if (middleware.route) { 
+    console.log(`Registered route: ${middleware.route.path}`);
+  }
+});

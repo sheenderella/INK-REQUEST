@@ -33,7 +33,9 @@ const SideNav = ({ user }) => {
           { path: "/inventory", label: "inventory", icon: <FaBoxOpen /> },
           { path: "/for-approval", label: "ink requests", icon: <FaCheck /> },
           { path: "/account-management", label: "user management", icon: <FaUsers /> },
-          { path: "/change-password", label: "change password", icon: <FaKey /> },
+          { path: "/change-password", label: "change password", icon: <FaKey /> }
+
+
         ].map(({ path, label, icon }) => (
           <button
             key={path}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-import SideNav from "../../../components/SideNavSuper"; // Ensure this path is correct
+import SideNav from "../../../components/SideNavSuper";
 import "./dashboardSupervisor.css";
 import RequestForm from "../../user/request/requestForm";
 
@@ -13,7 +13,7 @@ const DashboardSupervisor = () => {
   const [token, setToken] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  // Fetch user details using the authToken and userId from sessionStorage
+  
   useEffect(() => {
     const storedToken = sessionStorage.getItem("authToken");
     const storedUserId = sessionStorage.getItem("userId");
@@ -57,7 +57,6 @@ const DashboardSupervisor = () => {
 
   return (
     <div className="d-flex" style={{ height: "100vh", alignItems: "center", position: "relative", zIndex: 1 }}>
-      {/* Side Navigation for Supervisor */}
       <SideNav user={user} handleLogout={handleLogout} />
 
       <div className="content" style={{ height: "50vh" }}>
@@ -80,7 +79,6 @@ const DashboardSupervisor = () => {
             <button className="close-btn" onClick={() => setShowModal(false)}>
               &times;
             </button>
-            {/* Ensure token and userId are passed properly */}
             <RequestForm token={token} userId={userId} setShowModal={setShowModal} />
           </div>
         </div>

@@ -62,7 +62,7 @@ const AdminDashboard = () => {
         <div className="d-flex gap-4 mt-4">
           <div className="card bg-black text-white text-center p-4 rounded">
             <h3 className="fw-light">{pendingRequests}</h3>
-            <p className="fs-6">Pending Requests</p>
+            <p className="fs-6">pending requests</p>
           </div>
 
           <button
@@ -70,7 +70,7 @@ const AdminDashboard = () => {
             onClick={() => setShowModal(true)}
           >
             <i className="fas fa-plus text-lg"></i>
-            <span>Request Ink</span>
+            <span>request ink</span>
           </button>
           
         </div>

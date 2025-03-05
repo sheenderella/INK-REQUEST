@@ -35,17 +35,14 @@ export const submitInkRequest = async (req, res) => {
     console.log("User ID from Token:", userIdFromToken);
     console.log("User Role:", userRole);
 
-    // If no user session, return unauthorized
     if (!userIdFromToken) {
       return res.status(401).json({ error: 'Unauthorized: Invalid token or session expired.' });
     }
 
-    // Ink type is required
     if (!ink_type) {
       return res.status(400).json({ error: 'Ink type is required. Please select an ink type.' });
     }
 
-    // Fetch printer details
     const printer = await PrinterModel.findById(printerId).populate('compatible_inks');
     if (!printer) {
       return res.status(404).json({ error: 'Printer not found' });
@@ -59,7 +56,6 @@ export const submitInkRequest = async (req, res) => {
       return res.status(400).json({ error: 'No compatible ink model found for the selected printer.' });
     }
 
-    // Check inventory
     const inventoryRecord = await Inventory.findOne({
       ink_model: selectedInkModel._id,
       quantity: { $gt: 0 }
@@ -69,21 +65,20 @@ export const submitInkRequest = async (req, res) => {
       return res.status(400).json({ error: 'No available inventory for the selected ink model.' });
     }
 
-    // ✅ Set approval status based on role
+
     let supervisorApproval = "Pending";
     let adminApproval = "Pending";
 
     if (userRole === "supervisor") {
-      supervisorApproval = "Approved"; // Auto-approve for supervisor
+      supervisorApproval = "Approved"; 
     } else if (userRole === "admin") {
-      supervisorApproval = "Approved"; // Auto-approve for admin
-      adminApproval = "Pending"; // Admin still needs to approve
+      supervisorApproval = "Approved"; 
+      adminApproval = "Pending"; 
     }
 
-    // ✅ Create a new ink request
     const newRequest = new InkRequest({
       ink: inventoryRecord._id,
-      requested_by: userIdFromToken || userId, // Use the token ID or fallback to provided userId
+      requested_by: userIdFromToken || userId, 
       quantity_requested: 1,
       ink_type: ink_type,
       supervisor_approval: supervisorApproval,
@@ -94,12 +89,12 @@ export const submitInkRequest = async (req, res) => {
     });
 
     const savedRequest = await newRequest.save();
-    console.log("✅ Request successfully saved:", savedRequest);
+    console.log("Request successfully saved:", savedRequest);
 
     res.status(201).json(savedRequest);
 
   } catch (error) {
-    console.error('❌ Error in submitting ink request:', error);
+    console.error('Error in submitting ink request:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -107,14 +102,12 @@ export const submitInkRequest = async (req, res) => {
 
 export const getPendingSupervisorRequests = async (req, res) => {
   try {
-    // Assume req.user.department holds the supervisor's department.
     const supervisorDept = req.user.department;
 
     const pendingRequests = await InkRequest.find({ supervisor_approval: 'Pending' })
       .populate('ink')
       .populate('requested_by');
 
-    // Filter the requests to only include those from the same department.
     const filteredRequests = pendingRequests.filter(request => {
       return request.requested_by.department === supervisorDept;
     });
@@ -131,13 +124,11 @@ export const supervisorApproval = async (req, res) => {
     const supervisorId = req.user.id;
     const supervisorDept = req.user.department;
 
-    // Populate requested_by to check the department of the requestor.
     const request = await InkRequest.findById(requestId).populate('requested_by');
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    // Check if the requestor's department matches the supervisor's department.
     if (request.requested_by.department !== supervisorDept) {
       return res.status(403).json({ error: 'You are not authorized to approve requests outside your department.' });
     }
@@ -169,14 +160,12 @@ export const getPendingAdminRequests = async (req, res) => {
       supervisor_approval: 'Approved',
       admin_approval: 'Pending'
     })
-      // Populate the 'ink' field to get the Inventory details
-      .populate('ink')  // This will populate the 'ink' field with 'Inventory' data
-      // Now populate 'ink_model' within the 'ink' field to get 'ink_name' from 'InkModel'
-      .populate('ink.ink_model', 'ink_name')  // Populating 'ink_model' within 'ink' to get 'ink_name'
-      .populate('requested_by', 'first_name last_name department')  // Populate requested_by fields
+      .populate('ink')  
+      .populate('ink.ink_model', 'ink_name')  
+      .populate('requested_by', 'first_name last_name department')  
       .exec();
 
-    res.status(200).json(pendingRequests); // Return the populated requests
+    res.status(200).json(pendingRequests); 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

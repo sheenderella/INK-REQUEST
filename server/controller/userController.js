@@ -1,42 +1,34 @@
 // controller/userController.js
-
 import bcrypt from 'bcryptjs';
 import User from '../model/users.js';
-
-/**
- * CREATE a new user (Register)
- * - Default password: "password123" if not provided.
- * - Default username: generated from the last name (spaces removed) plus a padded count.
- */
 
 
 export const createUser = async (req, res) => {
   try {
     let { first_name, last_name, username, email, password, department } = req.body;
 
-    // Set default password if not provided
     if (!password) {
       password = "password123";
     }
 
-    // Hash the password
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate default username if not provided
+
     if (!username) {
       if (!last_name) {
         return res.status(400).json({ message: 'Last name is required to generate a username.' });
       }
       const cleanLastName = last_name.replace(/\s+/g, '').toLowerCase();
       
-      // Count how many users already have a username starting with the cleanLastName (case-insensitive)
+
       const count = await User.countDocuments({ username: new RegExp(`^${cleanLastName}`, 'i') });
       
-      // Generate username with padded count (e.g., smith001, smith002, etc.)
+
       username = `${cleanLastName}${(count + 1).toString().padStart(3, '0')}`;
     }
 
-    // Create a new user with the defaulted/generated values
+
     const newUser = new User({
       first_name,
       last_name,
@@ -54,12 +46,10 @@ export const createUser = async (req, res) => {
   }
 };
 
-/**
- * READ all users
- */
+
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}).select('-password'); // exclude password field
+    const users = await User.find({}).select('-password');
     res.status(200).json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -67,9 +57,6 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-/**
- * READ a single user by ID
- */
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -84,14 +71,11 @@ export const getUserById = async (req, res) => {
   }
 };
 
-/**
- * UPDATE a user
- */
+
 export const updateUser = async (req, res) => {
     try {
       const { id } = req.params;
       
-      // Build updatedData from request body ignoring empty fields
       let updatedData = {};
       for (const key in req.body) {
         if (req.body[key] !== "") {
@@ -99,14 +83,12 @@ export const updateUser = async (req, res) => {
         }
       }
   
-      // Retrieve the current user data
       const currentUser = await User.findById(id);
       if (!currentUser) {
         return res.status(404).json({ message: 'User not found' });
       }
   
-      // Compare updatedData with currentUser and remove fields that haven't changed
-      // For password, we always update if provided since the stored value is hashed.
+
       for (const key in updatedData) {
         if (key === "password") continue;
         if (currentUser[key] !== undefined && currentUser[key] == updatedData[key]) {
@@ -114,17 +96,14 @@ export const updateUser = async (req, res) => {
         }
       }
   
-      // If nothing is left to update, return a message indicating no changes were detected
       if (Object.keys(updatedData).length === 0) {
         return res.status(200).json({ message: 'No changes detected', user: currentUser });
       }
   
-      // If password is provided in the update, hash it
       if (updatedData.password) {
         updatedData.password = await bcrypt.hash(updatedData.password, 10);
       }
   
-      // Update the user with only the changed fields
       const updatedUser = await User.findByIdAndUpdate(id, updatedData, { new: true }).select('-password');
       res.status(200).json({ message: 'User updated successfully', user: updatedUser });
       
@@ -134,9 +113,7 @@ export const updateUser = async (req, res) => {
     }
   };
 
-/**
- * DELETE a user
- */
+
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -148,5 +125,49 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { id, oldPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: "User ID is required." });
+    }
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ message: "New passwords do not match." });
+    }
+
+    // Secure password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect." });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully!" });
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };

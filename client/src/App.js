@@ -7,6 +7,9 @@ import Login from "./pages/login/Login";
 // Error Page
 import ErrorPage from "./components/ErrorPage";
 
+// Change Password
+import ChangePassword from "./components/ChangePassword";
+
 // Admin Pages
 import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
 import Inventory from "./pages/admin/inventory/inventory";
@@ -14,9 +17,6 @@ import AccountManagement from "./pages/admin/accounts/AccountManagement";
 import ForApproval from "./pages/admin/forApproval/approval";
 import PrinterModel from "./pages/admin/inventory/PrinterModel";
 import InkModel from "./pages/admin/inventory/InkModel";
-
-
-
 
 
 // User Pages
@@ -27,7 +27,8 @@ import TrackRequest from './pages/user/track/trackRequest';
 // Supervisor Pages
 import DashboardSupervisor from './pages/supervisor/dashboard/dashboardSupervisor';
 import ApprovalSupervisor from './pages/supervisor/approval/approval';
-import TrackSupervisor from './pages/supervisor/track/trackRequest'; // Renamed for consistency
+import TrackSupervisor from './pages/supervisor/track/trackRequest'; 
+
 
 // PrivateRoute Component
 import PrivateRoute from "./components/PrivateRoute";
@@ -115,7 +116,14 @@ function App() {
         </PrivateRoute>
       )
     },
-    
+    { 
+      path: "/change-password", 
+      element: (
+        <PrivateRoute>
+          <ChangePassword />
+        </PrivateRoute>
+      )
+    },    
     // Protected supervisor routes
     { 
       path: "/dashboardSupervisor", 
