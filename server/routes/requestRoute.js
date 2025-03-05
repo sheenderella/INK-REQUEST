@@ -6,7 +6,7 @@ import {
   supervisorApproval,
   getPendingAdminRequests,
   adminApprovalAndIssuance,
-  getUserRequests // New method to get user requests
+  getUserRequests 
 } from '../controller/requestController.js';
 
 const router = express.Router();

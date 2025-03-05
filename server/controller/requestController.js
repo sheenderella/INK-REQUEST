@@ -160,22 +160,34 @@ export const getPendingAdminRequests = async (req, res) => {
       supervisor_approval: 'Approved',
       admin_approval: 'Pending'
     })
-      .populate('ink')  
-      .populate('ink.ink_model', 'ink_name')  
+      .populate({
+        path: 'ink',
+        populate: {
+          path: 'ink_model',
+          select: 'ink_name' 
+        }
+      })  
       .populate('requested_by', 'first_name last_name department')  
       .exec();
 
-    res.status(200).json(pendingRequests); 
+    console.log('Populated Pending Requests:', pendingRequests);  // Check the data in the logs
+
+    res.status(200).json(pendingRequests);
   } catch (error) {
+    console.error('Error fetching admin requests:', error);
     res.status(500).json({ error: error.message });
   }
 };
-
 
 export const adminApprovalAndIssuance = async (req, res) => {
   try {
     const { requestId, action, consumptionStatus } = req.body;
     const adminId = req.user.id;
+
+    console.log('Received requestId:', requestId);
+    console.log('Action:', action);
+    console.log('Consumption Status:', consumptionStatus);
+    
 
     const request = await InkRequest.findById(requestId).populate({
       path: 'ink',

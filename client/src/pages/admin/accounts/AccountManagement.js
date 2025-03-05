@@ -149,31 +149,62 @@ const AccountManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  {['first_name', 'last_name', 'username', 'email', 'password', 'role', 'department'].map((field) => (
-                    <td key={field}>
+                {users.map((user) => (
+                  <tr key={user._id}>
+                    {['first_name', 'last_name', 'username', 'email', 'password', 'role', 'department'].map((field) => (
+                      <td key={field}>
+                        {editingId === user._id ? (
+                          field === 'role' ? (
+                            // Role dropdown when editing
+                            <select
+                              value={editData[field] || ''}
+                              onChange={(e) => handleChange(e, field, setEditData, editData)}
+                              className="form-control"
+                            >
+                              <option value="employee">Employee</option>
+                              <option value="supervisor">Supervisor</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          ) : (
+                            // Input for other fields
+                            <input
+                              type="text"
+                              value={editData[field] || ''}
+                              onChange={(e) => handleChange(e, field, setEditData, editData)}
+                              className="form-control"
+                            />
+                          )
+                        ) : field === 'password' ? (
+                          '••••••'
+                        ) : (
+                          user[field]
+                        )}
+                      </td>
+                    ))}
+                    <td>
                       {editingId === user._id ? (
-                        <input type="text" value={editData[field] || ''} onChange={(e) => handleChange(e, field, setEditData, editData)} className="form-control" />
-                      ) : field === 'password' ? '••••••' : user[field]}
+                        <>
+                          <button className="btn btn-success me-2" onClick={saveEdit}>
+                            <FaSave /> Save
+                          </button>
+                          <button className="btn btn-secondary" onClick={() => setEditingId(null)}>
+                            <FaTimes /> Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="btn btn-primary me-2" onClick={() => { setEditingId(user._id); setEditData({ ...user }); }}>
+                            <FaEdit /> Edit
+                          </button>
+                          <button className="btn btn-danger" onClick={() => deleteUser(user._id)}>
+                            <FaTrash /> Delete
+                          </button>
+                        </>
+                      )}
                     </td>
-                  ))}
-                  <td>
-                    {editingId === user._id ? (
-                      <>
-                        <button className="btn btn-success me-2" onClick={saveEdit}><FaSave /> Save</button>
-                        <button className="btn btn-secondary" onClick={() => setEditingId(null)}><FaTimes /> Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="btn btn-primary me-2" onClick={() => { setEditingId(user._id); setEditData({ ...user }); }}><FaEdit /> Edit</button>
-                        <button className="btn btn-danger" onClick={() => deleteUser(user._id)}><FaTrash /> Delete</button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                  </tr>
+                ))}
+              </tbody>
           </table>
         )} />
       </div>

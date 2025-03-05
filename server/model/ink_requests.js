@@ -4,9 +4,9 @@ const inkRequestSchema = new mongoose.Schema(
   {
     ink: { type: mongoose.Schema.Types.ObjectId, ref: 'Inventory', required: true },
     requested_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    // Always set to 1 since each request is a single unit (or a set for colored)
+
     quantity_requested: { type: Number, required: true, default: 1 },
-    // New field to specify if the request is "black" or "colored"
+
     ink_type: { type: String, enum: ['black', 'colored'], default: 'black' },
     supervisor_approval: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
     supervisor_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
