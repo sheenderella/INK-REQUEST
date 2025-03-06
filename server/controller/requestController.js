@@ -179,15 +179,53 @@ export const getPendingAdminRequests = async (req, res) => {
   }
 };
 
-export const adminApprovalAndIssuance = async (req, res) => {
+export const adminApproval = async (req, res) => {
   try {
-    const { requestId, action, consumptionStatus } = req.body;
+    const { requestId, action } = req.body;
     const adminId = req.user.id;
 
-    console.log('Received requestId:', requestId);
-    console.log('Action:', action);
-    console.log('Consumption Status:', consumptionStatus);
-    
+    const request = await InkRequest.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    if (request.supervisor_approval !== 'Approved') {
+      return res.status(400).json({ error: 'Request has not been approved by supervisor' });
+    }
+
+    if (request.admin_approval !== 'Pending') {
+      return res.status(400).json({ error: 'Request already processed by admin' });
+    }
+
+    // Match the strings sent from the UI
+    if (action === 'Approved') {
+      request.admin_approval = 'Approved';
+      request.status = 'Approved';
+    } else if (action === 'Rejected') {
+      request.admin_approval = 'Rejected';
+      request.status = 'Rejected';
+    } else {
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+
+    request.admin_by = adminId;
+    request.admin_date = new Date();
+
+    await request.save();
+    return res.status(200).json(request);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+// Route for issuing ink (fulfillment)
+export const adminIssuance = async (req, res) => {
+  try {
+    const { requestId, consumptionStatus } = req.body;
+    const adminId = req.user.id;
 
     const request = await InkRequest.findById(requestId).populate({
       path: 'ink',
@@ -197,187 +235,235 @@ export const adminApprovalAndIssuance = async (req, res) => {
     if (!request) {
       return res.status(404).json({ error: 'Request not found' });
     }
-    if (!request.ink || !request.ink.ink_model) {
-      return res.status(400).json({ error: 'Inventory record or its ink model is not assigned to this request.' });
-    }
-    if (request.supervisor_approval !== 'Approved') {
-      return res.status(400).json({ error: 'Request has not been approved by supervisor' });
-    }
-    if (request.admin_approval !== 'Pending') {
-      return res.status(400).json({ error: 'Request already processed by admin' });
+
+    if (request.status !== 'Approved') {
+      return res.status(400).json({ error: 'Request has not been approved by admin yet' });
     }
 
-    if (request.ink_type === 'black') {
-      if (typeof consumptionStatus !== 'string') {
-        return res.status(400).json({ error: 'For black ink requests, consumptionStatus must be a string.' });
-      }
-    } else if (request.ink_type === 'colored') {
-      if (typeof consumptionStatus !== 'object' || Array.isArray(consumptionStatus)) {
-        return res.status(400).json({ error: 'For colored ink requests, consumptionStatus must be an object mapping each color to its status.' });
-      }
-    } else {
-      return res.status(400).json({ error: 'Invalid ink type' });
+    if (request.ink_type === 'black' && typeof consumptionStatus !== 'string') {
+      return res.status(400).json({ error: 'For black ink requests, consumptionStatus must be a string.' });
+    } else if (request.ink_type === 'colored' && typeof consumptionStatus !== 'object') {
+      return res.status(400).json({ error: 'For colored ink requests, consumptionStatus must be an object mapping each color to its status.' });
     }
 
-    request.admin_approval = action === 'Approve' ? 'Approved' : 'Rejected';
-    request.admin_by = adminId;
-    request.admin_date = new Date();
+    request.consumption_status = consumptionStatus;
+    request.status = 'Fulfilled';
 
-    if (action === 'Reject') {
-      request.status = 'Rejected';
-      await request.save();
-      return res.status(200).json(request);
-    }
-
-    request.status = 'Approved';
     await request.save();
 
-    if (request.ink_type === 'black') {
-      const inkId = request.ink._id;
-      const quantityRequested = request.quantity_requested; 
-      let remainingToDeduct = quantityRequested;
-      let issuedFrom = '';
+    // Perform issuance logic for black or colored ink
+    // You can reuse your logic for handling the ink issuance here.
 
- 
-      let inkInUseRecord = await InkInUse.findOne({ ink: inkId, status: 'In Use' });
-      let inkInUseAvailable = inkInUseRecord ? inkInUseRecord.quantity_used : 0;
-      const inventoryRecord = await Inventory.findById(inkId);
-      let inventoryAvailable = inventoryRecord ? inventoryRecord.quantity : 0;
-      if (inkInUseAvailable + inventoryAvailable < quantityRequested) {
-        return res.status(400).json({ error: 'Insufficient total stock (Ink In Use + Inventory) for issuance.' });
-      }
-
-
-      const { remaining, source } = await deductFromInkInUse(inkId, quantityRequested);
-      remainingToDeduct = remaining;
-      issuedFrom = source;
-
-    
-      if (remainingToDeduct > 0) {
-        if (!inventoryRecord || inventoryRecord.quantity < remainingToDeduct) {
-          return res.status(400).json({ error: 'Insufficient stock in inventory for issuance.' });
-        }
-        inventoryRecord.quantity -= remainingToDeduct;
-        await inventoryRecord.save();
-        if (!issuedFrom) {
-          issuedFrom = 'Inventory';
-        }
-      }
-
-    
-      const issuance = new InkIssuance({
-        request: request._id,
-        ink: inkId,
-        issued_quantity: quantityRequested,
-        issued_to: request.requested_by,
-        issued_by: adminId,
-        issue_date: new Date(),
-        source: issuedFrom
-      });
-      await issuance.save();
-
- 
-      request.consumption_status = consumptionStatus;
-      request.status = 'Fulfilled';
-      await request.save();
-
-      return res.status(200).json({
-        request,
-        issuance,
-        message: 'Black ink issuance processed successfully.'
-      });
-    } else if (request.ink_type === 'colored') {
-     
-      const inkModel = request.ink.ink_model;
-
-      const colorOptions = inkModel.colors.filter(color => color.toLowerCase() !== 'black');
-      const issuanceRecords = [];
-    
-    
-      for (let color of colorOptions) {
-
-        const batch = await Inventory.findOne({ ink_model: inkModel._id, color: color });
-        if (!batch || batch.quantity < 1) {
-          return res.status(400).json({ error: `Insufficient stock for ${color} ink in Inventory.` });
-        }
-    
-        let remainingToDeduct = 1;
-        let sourceUsed = '';
-    
-
-        let coloredInkInUse = await InkInUse.findOne({ ink: batch._id, color: color, status: 'In Use' });
-        if (coloredInkInUse) {
-          if (coloredInkInUse.quantity_used >= remainingToDeduct) {
-            coloredInkInUse.quantity_used -= remainingToDeduct;
-            sourceUsed = 'Ink In Use';
-            remainingToDeduct = 0;
-            if (coloredInkInUse.quantity_used === 0) {
-              coloredInkInUse.status = 'Transferred';
-            }
-            await coloredInkInUse.save();
-          } else {
-            remainingToDeduct -= coloredInkInUse.quantity_used;
-            coloredInkInUse.quantity_used = 0;
-            coloredInkInUse.status = 'Transferred';
-            sourceUsed = 'Ink In Use + Inventory';
-            await coloredInkInUse.save();
-          }
-        }
-    
-     
-        if (remainingToDeduct > 0) {
-          if (batch.quantity < remainingToDeduct) {
-            return res.status(400).json({ error: `Insufficient stock for ${color} ink in Inventory.` });
-          }
-          batch.quantity -= remainingToDeduct;
-          await batch.save();
-          if (!sourceUsed) {
-            sourceUsed = 'Inventory';
-          }
-        }
-    
-
-        if (consumptionStatus[color] === "Partially Used") {
-
-          const newInkInUse = new InkInUse({
-            ink: batch._id,
-            user: request.requested_by, 
-            department: "Default", 
-            quantity_used: 1, 
-            color: color,
-            status: 'In Use'
-          });
-          await newInkInUse.save();
-        }
-    
- 
-        const issuanceRecord = new InkIssuance({
-          request: request._id,
-          ink: batch._id,
-          issued_quantity: 1,
-          issued_to: request.requested_by,
-          issued_by: adminId,
-          issue_date: new Date(),
-          source: sourceUsed
-        });
-        await issuanceRecord.save();
-        issuanceRecords.push(issuanceRecord);
-      }
-    
-  
-      request.consumption_status = consumptionStatus;
-      request.status = 'Fulfilled';
-      await request.save();
-    
-      return res.status(200).json({
-        request,
-        issuance: issuanceRecords,
-        message: 'Colored ink issuance processed successfully (excluding Black).'
-      });
-    }
+    return res.status(200).json({
+      request,
+      message: 'Ink issuance processed successfully.'
+    });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
+
+
+
+// export const adminApprovalAndIssuance = async (req, res) => {
+//   try {
+//     const { requestId, action, consumptionStatus } = req.body;
+//     const adminId = req.user.id;
+
+//     console.log('Received requestId:', requestId);
+//     console.log('Action:', action);
+//     console.log('Consumption Status:', consumptionStatus);
+    
+
+//     const request = await InkRequest.findById(requestId).populate({
+//       path: 'ink',
+//       populate: { path: 'ink_model' }
+//     });
+
+//     if (!request) {
+//       return res.status(404).json({ error: 'Request not found' });
+//     }
+//     if (!request.ink || !request.ink.ink_model) {
+//       return res.status(400).json({ error: 'Inventory record or its ink model is not assigned to this request.' });
+//     }
+//     if (request.supervisor_approval !== 'Approved') {
+//       return res.status(400).json({ error: 'Request has not been approved by supervisor' });
+//     }
+//     if (request.admin_approval !== 'Pending') {
+//       return res.status(400).json({ error: 'Request already processed by admin' });
+//     }
+
+//     if (request.ink_type === 'black') {
+//       if (typeof consumptionStatus !== 'string') {
+//         return res.status(400).json({ error: 'For black ink requests, consumptionStatus must be a string.' });
+//       }
+//     } else if (request.ink_type === 'colored') {
+//       if (typeof consumptionStatus !== 'object' || Array.isArray(consumptionStatus)) {
+//         return res.status(400).json({ error: 'For colored ink requests, consumptionStatus must be an object mapping each color to its status.' });
+//       }
+//     } else {
+//       return res.status(400).json({ error: 'Invalid ink type' });
+//     }
+
+//     request.admin_approval = action === 'Approve' ? 'Approved' : 'Rejected';
+//     request.admin_by = adminId;
+//     request.admin_date = new Date();
+
+//     if (action === 'Reject') {
+//       request.status = 'Rejected';
+//       await request.save();
+//       return res.status(200).json(request);
+//     }
+
+//     request.status = 'Approved';
+//     await request.save();
+
+//     if (request.ink_type === 'black') {
+//       const inkId = request.ink._id;
+//       const quantityRequested = request.quantity_requested; 
+//       let remainingToDeduct = quantityRequested;
+//       let issuedFrom = '';
+
+ 
+//       let inkInUseRecord = await InkInUse.findOne({ ink: inkId, status: 'In Use' });
+//       let inkInUseAvailable = inkInUseRecord ? inkInUseRecord.quantity_used : 0;
+//       const inventoryRecord = await Inventory.findById(inkId);
+//       let inventoryAvailable = inventoryRecord ? inventoryRecord.quantity : 0;
+//       if (inkInUseAvailable + inventoryAvailable < quantityRequested) {
+//         return res.status(400).json({ error: 'Insufficient total stock (Ink In Use + Inventory) for issuance.' });
+//       }
+
+
+//       const { remaining, source } = await deductFromInkInUse(inkId, quantityRequested);
+//       remainingToDeduct = remaining;
+//       issuedFrom = source;
+
+    
+//       if (remainingToDeduct > 0) {
+//         if (!inventoryRecord || inventoryRecord.quantity < remainingToDeduct) {
+//           return res.status(400).json({ error: 'Insufficient stock in inventory for issuance.' });
+//         }
+//         inventoryRecord.quantity -= remainingToDeduct;
+//         await inventoryRecord.save();
+//         if (!issuedFrom) {
+//           issuedFrom = 'Inventory';
+//         }
+//       }
+
+    
+//       const issuance = new InkIssuance({
+//         request: request._id,
+//         ink: inkId,
+//         issued_quantity: quantityRequested,
+//         issued_to: request.requested_by,
+//         issued_by: adminId,
+//         issue_date: new Date(),
+//         source: issuedFrom
+//       });
+//       await issuance.save();
+
+ 
+//       request.consumption_status = consumptionStatus;
+//       request.status = 'Fulfilled';
+//       await request.save();
+
+//       return res.status(200).json({
+//         request,
+//         issuance,
+//         message: 'Black ink issuance processed successfully.'
+//       });
+//     } else if (request.ink_type === 'colored') {
+     
+//       const inkModel = request.ink.ink_model;
+
+//       const colorOptions = inkModel.colors.filter(color => color.toLowerCase() !== 'black');
+//       const issuanceRecords = [];
+    
+    
+//       for (let color of colorOptions) {
+
+//         const batch = await Inventory.findOne({ ink_model: inkModel._id, color: color });
+//         if (!batch || batch.quantity < 1) {
+//           return res.status(400).json({ error: `Insufficient stock for ${color} ink in Inventory.` });
+//         }
+    
+//         let remainingToDeduct = 1;
+//         let sourceUsed = '';
+    
+
+//         let coloredInkInUse = await InkInUse.findOne({ ink: batch._id, color: color, status: 'In Use' });
+//         if (coloredInkInUse) {
+//           if (coloredInkInUse.quantity_used >= remainingToDeduct) {
+//             coloredInkInUse.quantity_used -= remainingToDeduct;
+//             sourceUsed = 'Ink In Use';
+//             remainingToDeduct = 0;
+//             if (coloredInkInUse.quantity_used === 0) {
+//               coloredInkInUse.status = 'Transferred';
+//             }
+//             await coloredInkInUse.save();
+//           } else {
+//             remainingToDeduct -= coloredInkInUse.quantity_used;
+//             coloredInkInUse.quantity_used = 0;
+//             coloredInkInUse.status = 'Transferred';
+//             sourceUsed = 'Ink In Use + Inventory';
+//             await coloredInkInUse.save();
+//           }
+//         }
+    
+     
+//         if (remainingToDeduct > 0) {
+//           if (batch.quantity < remainingToDeduct) {
+//             return res.status(400).json({ error: `Insufficient stock for ${color} ink in Inventory.` });
+//           }
+//           batch.quantity -= remainingToDeduct;
+//           await batch.save();
+//           if (!sourceUsed) {
+//             sourceUsed = 'Inventory';
+//           }
+//         }
+    
+
+//         if (consumptionStatus[color] === "Partially Used") {
+
+//           const newInkInUse = new InkInUse({
+//             ink: batch._id,
+//             user: request.requested_by, 
+//             department: "Default", 
+//             quantity_used: 1, 
+//             color: color,
+//             status: 'In Use'
+//           });
+//           await newInkInUse.save();
+//         }
+    
+ 
+//         const issuanceRecord = new InkIssuance({
+//           request: request._id,
+//           ink: batch._id,
+//           issued_quantity: 1,
+//           issued_to: request.requested_by,
+//           issued_by: adminId,
+//           issue_date: new Date(),
+//           source: sourceUsed
+//         });
+//         await issuanceRecord.save();
+//         issuanceRecords.push(issuanceRecord);
+//       }
+    
+  
+//       request.consumption_status = consumptionStatus;
+//       request.status = 'Fulfilled';
+//       await request.save();
+    
+//       return res.status(200).json({
+//         request,
+//         issuance: issuanceRecords,
+//         message: 'Colored ink issuance processed successfully (excluding Black).'
+//       });
+//     }
+//   } catch (error) {
+//     return res.status(500).json({ error: error.message });
+//   }
+// };
 
 

@@ -38,24 +38,34 @@ const RequestApprovalTable = () => {
 
   const handleAction = async (requestId, action) => {
     try {
-      // Update the request status with admin's action (approve/reject)
-      const { data: updatedRequest } = await axios.put(`http://localhost:8000/api/ink/request/${action}/${requestId}`, 
-        { action }, 
-        { headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` } });
-
-      toast.success(`Request ${action}d successfully!`);
-
+      const requestData = {
+        requestId,
+        action
+      };
+  
+      const { data: updatedRequest } = await axios.post(
+        'http://localhost:8000/api/ink/admin/approval',
+        requestData,
+        {
+          headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` }
+        }
+      );
+  
+      // Compare with 'Approved' as sent from the UI
+      toast.success(`Request ${action === 'Approved' ? 'approved' : 'rejected'} successfully!`);
+  
       // Update the local requests state to reflect the changes
-      setRequests(requests.map(req => req._id === requestId 
-        ? { ...req, admin_approval: action.charAt(0).toUpperCase() + action.slice(1), status: updatedRequest.status }
-        : req));
-      
+      setRequests(requests.map(req =>
+        req._id === requestId
+          ? { ...req, admin_approval: action, status: updatedRequest.status }
+          : req
+      ));
     } catch (error) {
-      toast.error(`Failed to ${action} request.`);
+      toast.error(`Failed to ${action === 'Approved' ? 'approve' : 'reject'} request.`);
       console.error(error);
     }
-};
-
+  };
+  
 
 const openFulfillModal = (request) => {
   setSelectedRequest(request);
@@ -95,41 +105,53 @@ const handleFulfill = async () => {
                 <th>Name</th><th>Department</th><th>Ink Model</th><th>Ink Color</th><th>Date</th><th>Admin Approval</th><th>Request Status</th>
               </tr>
             </thead>
+            
             <tbody>
-              {requests.length > 0 ? requests.map((request) => (
-                <tr key={request._id}>
-                  <td>{request.requested_by ? `${request.requested_by.first_name} ${request.requested_by.last_name}` : 'N/A'}</td>
-                  <td>{request.requested_by ? request.requested_by.department : 'N/A'}</td>
-                  <td>{request.ink?.ink_model?.ink_name || 'N/A'}</td>
-                  <td>{request.ink_type || 'N/A'}</td>
-                  <td>{new Date(request.request_date).toLocaleDateString()}</td>
+  {requests.length > 0 ? requests.map((request) => (
+    <tr key={request._id}>
+      <td>{request.requested_by ? `${request.requested_by.first_name} ${request.requested_by.last_name}` : 'N/A'}</td>
+      <td>{request.requested_by ? request.requested_by.department : 'N/A'}</td>
+      <td>{request.ink?.ink_model?.ink_name || 'N/A'}</td>
+      <td>{request.ink_type || 'N/A'}</td>
+      <td>{new Date(request.request_date).toLocaleDateString()}</td>
 
-                  <td>
-                    {request.admin_approval === 'Approved' && <span className="badge bg-success">Approved</span>}
-                    {request.admin_approval === 'Rejected' && <span className="badge bg-danger">Rejected</span>}
-                    {!['Approved', 'Rejected'].includes(request.admin_approval) && (
-                      
-                      <>
-                        <button className="btn btn-success mr-2" 
-                          onClick={() => handleAction(request._id, 'approve')} 
-                          disabled={request.admin_approval !== 'Pending'}>
-                          <FaCheck /> Approve
-                        </button>
-                        <button className="btn btn-danger" 
-                          onClick={() => handleAction(request._id, 'reject')} 
-                          disabled={request.admin_approval !== 'Pending'}>
-                          <FaTimes /> Reject
-                        </button>
+      <td>
+        {request.admin_approval === 'Approved' && <span className="badge bg-success">Approved</span>}
+        {request.admin_approval === 'Rejected' && <span className="badge bg-danger">Rejected</span>}
+        
+        {!['Approved', 'Rejected'].includes(request.admin_approval) && (
+          <>
+            <button className="btn btn-success" 
+              onClick={() => handleAction(request._id, 'Approved')} 
+              disabled={request.admin_approval !== 'Pending'}>
+              <FaCheck /> Approve
+            </button>
+            <button className="btn btn-danger" 
+              onClick={() => handleAction(request._id, 'Rejected')} 
+              disabled={request.admin_approval !== 'Pending'}>
+              <FaTimes /> Reject
+            </button>
+          </>
+        )}
+      </td>
+      
+      <td>
+        {request.status === 'Fulfilled' ? (
+          <span className="badge bg-primary">Fulfilled</span>
+        ) : request.status === 'Rejected' ? (
+          <span className="badge bg-danger">Rejected</span>
+        ) : (
+          request.status
+        )}
+      </td>
+    </tr>
+  )) : (
+    <tr>
+      <td colSpan="8" className="text-center">No approved requests found</td>
+    </tr>
+  )}
+</tbody>
 
-                      </>
-
-                    )}
-                  </td>
-                  
-                  <td>{request.status === 'Fulfilled' ? <span className="badge bg-primary">Fulfilled</span> : request.status === 'Rejected' ? <span className="badge bg-danger">Rejected</span> : request.status}</td>
-                </tr>
-              )) : <tr><td colSpan="8" className="text-center">No approved requests found</td></tr>}
-            </tbody>
           </table>
         </div>
       </div>
