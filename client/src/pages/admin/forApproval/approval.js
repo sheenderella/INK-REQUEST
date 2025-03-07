@@ -22,76 +22,50 @@ const RequestApprovalTable = () => {
 
     const fetchData = async () => {
       try {
-        const userResponse = await axios.get(`http://localhost:8000/api/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
-        setUser(userResponse.data);
-
-        const requestsResponse = await axios.get('http://localhost:8000/api/ink/admin/requests', { headers: { Authorization: `Bearer ${token}` } });
-        setRequests(requestsResponse.data);
+        const { data: userData } = await axios.get(`http://localhost:8000/api/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+        setUser(userData);
+        const { data: reqs } = await axios.get('http://localhost:8000/api/ink/admin/requests', { headers: { Authorization: `Bearer ${token}` } });
+        setRequests(reqs);
       } catch (error) {
         toast.error('Error fetching data');
         console.error(error);
       }
     };
-
     fetchData();
   }, [navigate]);
 
-  const handleAction = async (requestId, action) => {
+  const handleAction = async (id, action) => {
     try {
-      const requestData = {
-        requestId,
-        action
-      };
-  
-      const { data: updatedRequest } = await axios.post(
-        'http://localhost:8000/api/ink/admin/approval',
-        requestData,
-        {
-          headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` }
-        }
-      );
-  
-      // Compare with 'Approved' as sent from the UI
+      const { data: updated } = await axios.post('http://localhost:8000/api/ink/admin/approval', { requestId: id, action }, {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` }
+      });
       toast.success(`Request ${action === 'Approved' ? 'approved' : 'rejected'} successfully!`);
-  
-      // Update the local requests state to reflect the changes
-      setRequests(requests.map(req =>
-        req._id === requestId
-          ? { ...req, admin_approval: action, status: updatedRequest.status }
-          : req
-      ));
+      setRequests(requests.map(r => r._id === id ? { ...r, admin_approval: action, status: updated.status } : r));
     } catch (error) {
       toast.error(`Failed to ${action === 'Approved' ? 'approve' : 'reject'} request.`);
       console.error(error);
     }
   };
-  
 
-const openFulfillModal = (request) => {
-  setSelectedRequest(request);
-  setConsumptionStatus(request.ink_type === 'black' ? 'Fully Used' : {}); // Default status
-  setShowModal(true);
-};
+  const openFulfillModal = req => {
+    setSelectedRequest(req);
+    setConsumptionStatus(req.ink_type === 'black' ? 'Fully Used' : {});
+    setShowModal(true);
+  };
 
-const handleFulfill = async () => {
-  try {
-    // Send consumption status to backend for updating the request
-    await axios.put(`http://localhost:8000/api/ink/request/issue/${selectedRequest._id}`, 
-      { consumptionStatus },
-      { headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` } });
-
-    toast.success('Request fulfilled successfully!');
-    
-    // Update the status of the request in the frontend to 'Fulfilled'
-    setRequests(requests.map(req => req._id === selectedRequest._id ? { ...req, status: 'Fulfilled' } : req));
-
-    setShowModal(false);
-  } catch (error) {
-    toast.error('Failed to fulfill request.');
-    console.error(error);
-  }
-};
-
+  const handleFulfill = async () => {
+    try {
+      await axios.put(`http://localhost:8000/api/ink/request/issue/${selectedRequest._id}`, { consumptionStatus }, {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` }
+      });
+      toast.success('Request fulfilled successfully!');
+      setRequests(requests.map(r => r._id === selectedRequest._id ? { ...r, status: 'Fulfilled' } : r));
+      setShowModal(false);
+    } catch (error) {
+      toast.error('Failed to fulfill request.');
+      console.error(error);
+    }
+  };
 
   return (
     <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}>
@@ -102,97 +76,92 @@ const handleFulfill = async () => {
           <table className="table table-bordered table-striped mt-3 text-center">
             <thead>
               <tr>
-                <th>Name</th><th>Department</th><th>Ink Model</th><th>Ink Color</th><th>Date</th><th>Admin Approval</th><th>Request Status</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Ink Model</th>
+                <th>Ink Color</th>
+                <th>Date</th>
+                <th>Admin Approval</th>
+                <th>Request Status</th>
               </tr>
             </thead>
-            
             <tbody>
-  {requests.length > 0 ? requests.map((request) => (
-    <tr key={request._id}>
-      <td>{request.requested_by ? `${request.requested_by.first_name} ${request.requested_by.last_name}` : 'N/A'}</td>
-      <td>{request.requested_by ? request.requested_by.department : 'N/A'}</td>
-      <td>{request.ink?.ink_model?.ink_name || 'N/A'}</td>
-      <td>{request.ink_type || 'N/A'}</td>
-      <td>{new Date(request.request_date).toLocaleDateString()}</td>
-
-      <td>
-        {request.admin_approval === 'Approved' && <span className="badge bg-success">Approved</span>}
-        {request.admin_approval === 'Rejected' && <span className="badge bg-danger">Rejected</span>}
-        
-        {!['Approved', 'Rejected'].includes(request.admin_approval) && (
-          <>
-            <button className="btn btn-success" 
-              onClick={() => handleAction(request._id, 'Approved')} 
-              disabled={request.admin_approval !== 'Pending'}>
-              <FaCheck /> Approve
-            </button>
-            <button className="btn btn-danger" 
-              onClick={() => handleAction(request._id, 'Rejected')} 
-              disabled={request.admin_approval !== 'Pending'}>
-              <FaTimes /> Reject
-            </button>
-          </>
-        )}
-      </td>
-      
-      <td>
-        {request.status === 'Fulfilled' ? (
-          <span className="badge bg-primary">Fulfilled</span>
-        ) : request.status === 'Rejected' ? (
-          <span className="badge bg-danger">Rejected</span>
-        ) : (
-          request.status
-        )}
-      </td>
-    </tr>
-  )) : (
-    <tr>
-      <td colSpan="8" className="text-center">No approved requests found</td>
-    </tr>
-  )}
-</tbody>
-
+              {requests.length > 0 ? requests.map(r => (
+                <tr key={r._id}>
+                  <td>{r.requested_by ? `${r.requested_by.first_name} ${r.requested_by.last_name}` : 'N/A'}</td>
+                  <td>{r.requested_by?.department || 'N/A'}</td>
+                  <td>{r.ink?.ink_model?.ink_name || 'N/A'}</td>
+                  <td>{r.ink_type || 'N/A'}</td>
+                  <td>{new Date(r.request_date).toLocaleDateString()}</td>
+                  <td>
+                    {r.admin_approval === 'Approved' && <span className="badge bg-success">Approved</span>}
+                    {r.admin_approval === 'Rejected' && <span className="badge bg-danger">Rejected</span>}
+                    {r.admin_approval === 'Pending' && (
+                      <>
+                        <button className="btn btn-success me-1" onClick={() => handleAction(r._id, 'Approved')}>
+                          <FaCheck /> Approve
+                        </button>
+                        <button className="btn btn-danger" onClick={() => handleAction(r._id, 'Rejected')}>
+                          <FaTimes /> Reject
+                        </button>
+                      </>
+                    )}
+                  </td>
+                  <td>
+                    {r.status === 'Fulfilled' ? (
+                      <span className="badge bg-primary">Fulfilled</span>
+                    ) : r.status === 'Rejected' ? (
+                      <span className="badge bg-danger">Rejected</span>
+                    ) : (
+                      r.status
+                    )}
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan="8" className="text-center">No approved requests found</td>
+                </tr>
+              )}
+            </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modal for Fulfilled status */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton><Modal.Title> Request Fulfilled </Modal.Title></Modal.Header>
-
-
+        <Modal.Header closeButton>
+          <Modal.Title>Request Fulfilled</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
-  <label htmlFor="consumptionStatus">Consumption Status</label>
-  {selectedRequest?.ink_type === 'colored' ? (
-    Object.keys(consumptionStatus).map(color => (
-      <div key={color}>
-        <label>{color}</label>
-        <select 
-          className="form-control" 
-          value={consumptionStatus[color]} 
-          onChange={(e) => setConsumptionStatus({ ...consumptionStatus, [color]: e.target.value })}>
-          <option value="Used">Used</option>
-          <option value="Partially Used">Partially Used</option>
-          <option value="Not Used">Not Used</option>
-        </select>
-      </div>
-    ))
-  ) : (
-    <input 
-      type="text" 
-      className="form-control" 
-      value={consumptionStatus} 
-      onChange={(e) => setConsumptionStatus(e.target.value)} 
-      placeholder="Enter consumption status" />
-  )}
-</Modal.Body>
+          <label htmlFor="consumptionStatus">Consumption Status</label>
+          {selectedRequest?.ink_type === 'colored' ? (
+            Object.keys(consumptionStatus).map(color => (
+              <div key={color}>
+                <label>{color}</label>
+                <select
+                  className="form-control"
+                  value={consumptionStatus[color]}
+                  onChange={e => setConsumptionStatus({ ...consumptionStatus, [color]: e.target.value })}>
+                  <option value="Used">Used</option>
+                  <option value="Partially Used">Partially Used</option>
+                  <option value="Not Used">Not Used</option>
+                </select>
+              </div>
+            ))
+          ) : (
+            <input
+              type="text"
+              className="form-control"
+              value={consumptionStatus}
+              onChange={e => setConsumptionStatus(e.target.value)}
+              placeholder="Enter consumption status" />
+          )}
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
           <Button variant="primary" onClick={handleFulfill}>Fulfill Request</Button>
         </Modal.Footer>
       </Modal>
-
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
     </div>
   );
 };

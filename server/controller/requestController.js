@@ -179,6 +179,7 @@ export const getPendingAdminRequests = async (req, res) => {
   }
 };
 
+
 export const adminApproval = async (req, res) => {
   try {
     const { requestId, action } = req.body;
@@ -218,8 +219,6 @@ export const adminApproval = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
-
-
 
 // Route for issuing ink (fulfillment)
 export const adminIssuance = async (req, res) => {
