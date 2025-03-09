@@ -240,10 +240,12 @@ export const adminApproval = async (req, res) => {
   }
 };
 
+
 export const adminIssuance = async (req, res) => {
   try {
     const { requestId, consumptionStatus } = req.body;
-    const adminId = req.user.id;
+    // Use the correct key from req.user for adminId
+    const adminId = req.user.userId || req.user.id;
 
     // Populate ink_model with both ink_name and colors
     const request = await InkRequest.findById(requestId).populate({
@@ -300,10 +302,10 @@ export const adminIssuance = async (req, res) => {
       let issuedFrom = '';
 
       // Check stock from Ink In Use and Inventory
-      let inkInUseRecord = await InkInUse.findOne({ ink: inkId, status: 'In Use' });
-      let inkInUseAvailable = inkInUseRecord ? inkInUseRecord.quantity_used : 0;
+      const inkInUseRecord = await InkInUse.findOne({ ink: inkId, status: 'In Use' });
+      const inkInUseAvailable = inkInUseRecord ? inkInUseRecord.quantity_used : 0;
       const inventoryDoc = await Inventory.findById(inkId);
-      let inventoryAvailable = inventoryDoc ? inventoryDoc.quantity : 0;
+      const inventoryAvailable = inventoryDoc ? inventoryDoc.quantity : 0;
       if (inkInUseAvailable + inventoryAvailable < quantityRequested) {
         return res.status(400).json({ error: 'Insufficient total stock (Ink In Use + Inventory) for issuance.' });
       }
@@ -325,6 +327,19 @@ export const adminIssuance = async (req, res) => {
         }
       }
 
+      // If the consumptionStatus is "Partially Used", create a new Ink In Use record for Black ink.
+      if (consumptionStatus === "Partially Used") {
+        const newInkInUse = new InkInUse({
+          ink: inventoryRecord._id,
+          user: request.requested_by,
+          department: "Default",
+          quantity_used: quantityRequested, // or adjust as needed
+          color: "Black",
+          status: 'In Use'
+        });
+        await newInkInUse.save();
+      }
+
       // Create an issuance record
       const issuance = new InkIssuance({
         request: request._id,
@@ -337,8 +352,8 @@ export const adminIssuance = async (req, res) => {
       });
       await issuance.save();
 
-      // Update request consumption status and mark it fulfilled
-      request.consumption_status = consumptionStatus;
+      // For consistency, store consumption status as an object for black ink too.
+      request.consumption_status = { Black: consumptionStatus };
       request.status = 'Fulfilled';
       await request.save();
 
@@ -368,7 +383,7 @@ export const adminIssuance = async (req, res) => {
         let sourceUsed = '';
 
         // Check Ink In Use record for the specific color
-        let coloredInkInUse = await InkInUse.findOne({ ink: batch._id, color: color, status: 'In Use' });
+        const coloredInkInUse = await InkInUse.findOne({ ink: batch._id, color: color, status: 'In Use' });
         if (coloredInkInUse) {
           if (coloredInkInUse.quantity_used >= remainingToDeduct) {
             coloredInkInUse.quantity_used -= remainingToDeduct;
@@ -438,10 +453,10 @@ export const adminIssuance = async (req, res) => {
       });
     }
   } catch (error) {
+    console.error('Error in adminIssuance:', error);
     return res.status(500).json({ error: error.message });
   }
 };
-
 
 
 

@@ -73,7 +73,7 @@ const Consumption = () => {
       );
       toast.success('Request fulfilled successfully!');
       setTimeout(() => {
-        navigate('/admin/for-approval');
+        navigate('/for-approval');
       }, 1500);
     } catch (error) {
       toast.error('Failed to fulfill request.');
