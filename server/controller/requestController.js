@@ -184,10 +184,10 @@ export const getPendingAdminRequests = async (req, res) => {
         path: 'ink',
         populate: {
           path: 'ink_model',
-          select: 'ink_name' 
+          select: 'ink_name'
         }
-      })  
-      .populate('requested_by', 'first_name last_name department')  
+      })
+      .populate('requested_by', 'first_name last_name department')
       .exec();
 
     console.log('Populated Pending Requests:', pendingRequests);  // Check the data in the logs

@@ -18,9 +18,13 @@ const RequestApprovalTable = () => {
 
     const fetchData = async () => {
       try {
-        const { data: userData } = await axios.get(`http://localhost:8000/api/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+        const { data: userData } = await axios.get(`http://localhost:8000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setUser(userData);
-        const { data: reqs } = await axios.get('http://localhost:8000/api/ink/admin/requests', { headers: { Authorization: `Bearer ${token}` } });
+        const { data: reqs } = await axios.get('http://localhost:8000/api/ink/admin/requests', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setRequests(reqs);
       } catch (error) {
         toast.error('Error fetching data');
@@ -32,23 +36,28 @@ const RequestApprovalTable = () => {
 
   const handleAction = async (id, action) => {
     try {
-      const { data: updated } = await axios.post('http://localhost:8000/api/ink/admin/approval', { requestId: id, action }, {
-        headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` }
-      });
+      const { data: updated } = await axios.post(
+        'http://localhost:8000/api/ink/admin/approval',
+        { requestId: id, action },
+        { headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` } }
+      );
       toast.success(`Request ${action === 'Approved' ? 'approved' : 'rejected'} successfully!`);
-      setRequests(requests.map(r => r._id === id ? { ...r, admin_approval: action, status: updated.status } : r));
+      setRequests(
+        requests.map((r) =>
+          r._id === id ? { ...r, admin_approval: action, status: updated.status } : r
+        )
+      );
     } catch (error) {
       toast.error(`Failed to ${action === 'Approved' ? 'approve' : 'reject'} request.`);
       console.error(error);
     }
   };
 
-// Redirect to the consumption page along with the selected request
-const handleFulfillRedirect = (req) => {
-  console.log('Redirecting with request:', req);
-  navigate('/consumption', { state: { request: req } });
-};
-
+  // Redirect to the consumption page along with the selected request
+  const handleFulfillRedirect = (req) => {
+    console.log('Redirecting with request:', req);
+    navigate('/consumption', { state: { request: req } });
+  };
 
   return (
     <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}>
@@ -69,43 +78,69 @@ const handleFulfillRedirect = (req) => {
               </tr>
             </thead>
             <tbody>
-              {requests.length > 0 ? requests.map(r => (
-                <tr key={r._id}>
-                  <td>{r.requested_by ? `${r.requested_by.first_name} ${r.requested_by.last_name}` : 'N/A'}</td>
-                  <td>{r.requested_by?.department || 'N/A'}</td>
-                  <td>{r.ink?.ink_model?.ink_name || 'N/A'}</td>
-                  <td>{r.ink_type || 'N/A'}</td>
-                  <td>{new Date(r.request_date).toLocaleDateString()}</td>
-                  <td>
-                    {r.admin_approval === 'Approved' && <span className="badge bg-success">Approved</span>}
-                    {r.admin_approval === 'Rejected' && <span className="badge bg-danger">Rejected</span>}
-                    {r.admin_approval === 'Pending' && (
-                      <>
-                        <button className="btn btn-success me-1" onClick={() => handleAction(r._id, 'Approved')}>
-                          <FaCheck /> Approve
+              {requests.length > 0 ? (
+                requests.map((r) => (
+                  <tr key={r._id}>
+                    <td>
+                      {r.requested_by
+                        ? `${r.requested_by.first_name} ${r.requested_by.last_name}`
+                        : 'N/A'}
+                    </td>
+                    <td>{r.requested_by?.department || 'N/A'}</td>
+                    <td>
+                      {r.ink && r.ink.length > 0 && r.ink[0].ink_model
+                        ? r.ink[0].ink_model.ink_name
+                        : 'N/A'}
+                    </td>
+                    <td>{r.ink_type || 'N/A'}</td>
+                    <td>{new Date(r.request_date).toLocaleDateString()}</td>
+                    <td>
+                      {r.admin_approval === 'Approved' && (
+                        <span className="badge bg-success">Approved</span>
+                      )}
+                      {r.admin_approval === 'Rejected' && (
+                        <span className="badge bg-danger">Rejected</span>
+                      )}
+                      {r.admin_approval === 'Pending' && (
+                        <>
+                          <button
+                            className="btn btn-success me-1"
+                            onClick={() => handleAction(r._id, 'Approved')}
+                          >
+                            <FaCheck /> Approve
+                          </button>
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => handleAction(r._id, 'Rejected')}
+                          >
+                            <FaTimes /> Reject
+                          </button>
+                        </>
+                      )}
+                    </td>
+                    <td>
+                      {r.status === 'Fulfilled' ? (
+                        <span className="badge bg-primary">Fulfilled</span>
+                      ) : r.admin_approval === 'Approved' ? (
+                        <button
+                          className="btn btn-info"
+                          onClick={() => handleFulfillRedirect(r)}
+                        >
+                          Fulfill Request
                         </button>
-                        <button className="btn btn-danger" onClick={() => handleAction(r._id, 'Rejected')}>
-                          <FaTimes /> Reject
-                        </button>
-                      </>
-                    )}
-                  </td>
-                  <td>
-                    {r.status === 'Fulfilled' ? (
-                      <span className="badge bg-primary">Fulfilled</span>
-                    ) : r.admin_approval === 'Approved' ? (
-                      // Redirect to the consumption page instead of opening a modal
-                      <button className="btn btn-info" onClick={() => handleFulfillRedirect(r)}>Fulfill Request</button>
-                    ) : r.status === 'Rejected' ? (
-                      <span className="badge bg-danger">Rejected</span>
-                    ) : (
-                      r.status
-                    )}
-                  </td>
-                </tr>
-              )) : (
+                      ) : r.status === 'Rejected' ? (
+                        <span className="badge bg-danger">Rejected</span>
+                      ) : (
+                        r.status
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">No approved requests found</td>
+                  <td colSpan="8" className="text-center">
+                    No approved requests found
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -118,4 +153,3 @@ const handleFulfillRedirect = (req) => {
 };
 
 export default RequestApprovalTable;
-
