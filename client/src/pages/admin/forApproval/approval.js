@@ -5,15 +5,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import SideNav from '../../../components/SideNav';
 import { toast, ToastContainer } from 'react-toastify';
-import { Modal, Button } from 'react-bootstrap';
 
 const RequestApprovalTable = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [user, setUser] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [consumptionStatus, setConsumptionStatus] = useState({});
 
   useEffect(() => {
     const token = sessionStorage.getItem('authToken');
@@ -47,25 +43,12 @@ const RequestApprovalTable = () => {
     }
   };
 
-  const openFulfillModal = req => {
-    setSelectedRequest(req);
-    setConsumptionStatus(req.ink_type === 'black' ? 'Fully Used' : {});
-    setShowModal(true);
-  };
+// Redirect to the consumption page along with the selected request
+const handleFulfillRedirect = (req) => {
+  console.log('Redirecting with request:', req);
+  navigate('/consumption', { state: { request: req } });
+};
 
-  const handleFulfill = async () => {
-    try {
-      await axios.put(`http://localhost:8000/api/ink/request/issue/${selectedRequest._id}`, { consumptionStatus }, {
-        headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` }
-      });
-      toast.success('Request fulfilled successfully!');
-      setRequests(requests.map(r => r._id === selectedRequest._id ? { ...r, status: 'Fulfilled' } : r));
-      setShowModal(false);
-    } catch (error) {
-      toast.error('Failed to fulfill request.');
-      console.error(error);
-    }
-  };
 
   return (
     <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}>
@@ -110,6 +93,9 @@ const RequestApprovalTable = () => {
                   <td>
                     {r.status === 'Fulfilled' ? (
                       <span className="badge bg-primary">Fulfilled</span>
+                    ) : r.admin_approval === 'Approved' ? (
+                      // Redirect to the consumption page instead of opening a modal
+                      <button className="btn btn-info" onClick={() => handleFulfillRedirect(r)}>Fulfill Request</button>
                     ) : r.status === 'Rejected' ? (
                       <span className="badge bg-danger">Rejected</span>
                     ) : (
@@ -126,44 +112,10 @@ const RequestApprovalTable = () => {
           </table>
         </div>
       </div>
-
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Request Fulfilled</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <label htmlFor="consumptionStatus">Consumption Status</label>
-          {selectedRequest?.ink_type === 'colored' ? (
-            Object.keys(consumptionStatus).map(color => (
-              <div key={color}>
-                <label>{color}</label>
-                <select
-                  className="form-control"
-                  value={consumptionStatus[color]}
-                  onChange={e => setConsumptionStatus({ ...consumptionStatus, [color]: e.target.value })}>
-                  <option value="Used">Used</option>
-                  <option value="Partially Used">Partially Used</option>
-                  <option value="Not Used">Not Used</option>
-                </select>
-              </div>
-            ))
-          ) : (
-            <input
-              type="text"
-              className="form-control"
-              value={consumptionStatus}
-              onChange={e => setConsumptionStatus(e.target.value)}
-              placeholder="Enter consumption status" />
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Close</Button>
-          <Button variant="primary" onClick={handleFulfill}>Fulfill Request</Button>
-        </Modal.Footer>
-      </Modal>
       <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
     </div>
   );
 };
 
 export default RequestApprovalTable;
+

@@ -15,9 +15,9 @@ import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
 import Inventory from "./pages/admin/inventory/inventory";
 import AccountManagement from "./pages/admin/accounts/AccountManagement";
 import ForApproval from "./pages/admin/forApproval/approval";
+import Consumption from "./pages/admin/forApproval/consumption";
 import PrinterModel from "./pages/admin/inventory/PrinterModel";
 import InkModel from "./pages/admin/inventory/InkModel";
-
 
 // User Pages
 import DashboardUser from './pages/user/dashboard/dashboardUser';
@@ -28,7 +28,6 @@ import TrackRequest from './pages/user/track/trackRequest';
 import DashboardSupervisor from './pages/supervisor/dashboard/dashboardSupervisor';
 import ApprovalSupervisor from './pages/supervisor/approval/approval';
 import TrackSupervisor from './pages/supervisor/track/trackRequest'; 
-
 
 // PrivateRoute Component
 import PrivateRoute from "./components/PrivateRoute";
@@ -72,7 +71,6 @@ function App() {
         </PrivateRoute>
       )
     },
-    
     { 
       path: "/inventory", 
       element: (
@@ -81,7 +79,6 @@ function App() {
         </PrivateRoute>
       ) 
     },
-
     { 
       path: "/PrinterModel", 
       element: (
@@ -90,7 +87,6 @@ function App() {
         </PrivateRoute>
       ) 
     },
-
     { 
       path: "/InkModel", 
       element: (
@@ -99,7 +95,6 @@ function App() {
         </PrivateRoute>
       ) 
     },
-
     { 
       path: "/account-management", 
       element: (
@@ -117,13 +112,22 @@ function App() {
       )
     },
     { 
+      path: "/consumption", 
+      element: (
+        <PrivateRoute>
+          <Consumption />
+        </PrivateRoute>
+      )
+    },
+    { 
       path: "/change-password", 
       element: (
         <PrivateRoute>
           <ChangePassword />
         </PrivateRoute>
       )
-    },    
+    },
+    
     // Protected supervisor routes
     { 
       path: "/dashboardSupervisor", 
@@ -133,7 +137,6 @@ function App() {
         </PrivateRoute>
       )
     },
-
     { 
       path: "/ApprovalSupervisor", 
       element: (
@@ -142,7 +145,6 @@ function App() {
         </PrivateRoute>
       )
     },
-
     { 
       path: "/TrackSupervisor",  // Added missing route for TrackSupervisor
       element: (
@@ -151,7 +153,7 @@ function App() {
         </PrivateRoute>
       )
     },
-
+    
     // Fallback 
     { path: "*", element: <ErrorPage /> } 
   ]);

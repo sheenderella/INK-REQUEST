@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const inkRequestSchema = new mongoose.Schema(
   {
-    ink: { type: mongoose.Schema.Types.ObjectId, ref: 'Inventory', required: true },
+    ink: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Inventory' }],    
     requested_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
     quantity_requested: { type: Number, required: true, default: 1 },
