@@ -69,10 +69,16 @@ const InkOrderPage = () => {
       }, {});
     }
 
+    // Prepare the total quantity requested, adding additional quantities
+    let totalRequested = request.quantity_requested;
+    Object.values(orderInputs).forEach((input) => {
+      totalRequested += input.additional;
+    });
+
     axios
       .post(
         'http://localhost:8000/api/ink/admin/issuance',
-        { requestId: request._id, consumptionStatus },
+        { requestId: request._id, consumptionStatus, totalRequested },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then(() => {
@@ -114,10 +120,12 @@ const InkOrderPage = () => {
               <tbody>
                 {inkRecords.map((rec) => {
                   const key = rec.color.toLowerCase();
+                  // Check if there's an "Ink In Use" record for the color, else show 0
+                  const inkInUseQuantity = rec.quantity_used || 0;
                   return (
                     <tr key={rec._id}>
                       <td>{rec.color}</td>
-                      <td>{rec.quantity_used}</td>
+                      <td>{inkInUseQuantity}</td>
                       <td>
                         <input
                           type="number"

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../model/users.js';
 
+
 export const loginUser = async (req, res) => {
   const { username, password } = req.body;
 
@@ -18,11 +19,11 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials: Incorrect password' });
     }
 
-    // Create a JWT token
+    // Create a JWT token with the department included
     let token;
     try {
       token = jwt.sign(
-        { userId: user._id, username: user.username, role: user.role },
+        { userId: user._id, username: user.username, role: user.role, department: user.department }, // Add department to the payload
         process.env.JWT_SECRET, 
         { expiresIn: '1h' } 
       );

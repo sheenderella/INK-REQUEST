@@ -1,63 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import SideNav from '../../../components/SideNavSuper';
+import { toast, ToastContainer } from 'react-toastify'; // Importing react-toastify
+import 'react-toastify/dist/ReactToastify.css'; // Importing toast styles
 
 const RequestApprovalTable = () => {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
-  const [message, setMessage] = useState('');
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const token = sessionStorage.getItem('authToken');
-    const userId = sessionStorage.getItem('userId');
+  const token = sessionStorage.getItem('authToken');
+  const userId = sessionStorage.getItem('userId');
 
+  // Navigate to login if token or userId is missing
+  useEffect(() => {
     if (!token || !userId) {
-      setMessage('No token or user session found. Please login again.');
+      toast.error('No token or user session found. Please login again.'); // Use toast for error message
       navigate('/login');
       return;
     }
 
-    const fetchUserData = async () => {
+    // Fetch user data and requests simultaneously
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/users/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const userResponse = await axios.get(`http://localhost:8000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setUser(response.data);
+        setUser(userResponse.data);
+
+        const requestsResponse = await axios.get('http://localhost:8000/api/ink/supervisor/requests', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Handle empty response (no requests)
+        if (requestsResponse.data.length === 0) {
+          toast.info('No requests yet for approval.');
+        }
+
+        setRequests(requestsResponse.data);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        if (error.response) {
+          toast.error(`Error: ${error.response.data.error || 'Something went wrong'}`);
+        } else if (error.request) {
+          toast.error('No response received from server.');
+        } else {
+          toast.error('Failed to fetch data.');
+        }
+        console.error('Error fetching data:', error);
       }
     };
 
-    const fetchRequests = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/ink/supervisor/requests', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setRequests(response.data);
-      } catch (error) {
-        setMessage('Failed to fetch requests.');
-        console.error('Error fetching requests:', error);
-      }
-    };
+    fetchData();
+  }, [token, userId, navigate]);
 
-    fetchUserData();
-    fetchRequests();
-  }, [navigate]);
-
-  const handleApprove = async (requestId) => {
+  // Approve request handler
+  const handleApprove = useCallback(async (requestId) => {
     try {
-      await axios.put(`http://localhost:8000/api/ink/request/approve/${requestId}`, null, {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
-        },
+      const response = await axios.post('http://localhost:8000/api/ink/supervisor', {
+        requestId,
+        action: 'Approve',
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setRequests((prevRequests) =>
@@ -65,19 +71,21 @@ const RequestApprovalTable = () => {
           request._id === requestId ? { ...request, status: 'Approved' } : request
         )
       );
-      setMessage('Request approved successfully!');
+      toast.success('Request approved successfully!');
     } catch (error) {
-      setMessage('Failed to approve request.');
+      toast.error('Failed to approve request.');
       console.error('Error approving request:', error);
     }
-  };
+  }, [token]);
 
-  const handleReject = async (requestId) => {
+  // Reject request handler
+  const handleReject = useCallback(async (requestId) => {
     try {
-      await axios.put(`http://localhost:8000/api/ink/request/reject/${requestId}`, null, {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
-        },
+      const response = await axios.post('http://localhost:8000/api/ink/supervisor', {
+        requestId,
+        action: 'Reject',
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setRequests((prevRequests) =>
@@ -85,12 +93,12 @@ const RequestApprovalTable = () => {
           request._id === requestId ? { ...request, status: 'Rejected' } : request
         )
       );
-      setMessage('Request rejected successfully!');
+      toast.success('Request rejected successfully!');
     } catch (error) {
-      setMessage('Failed to reject request.');
+      toast.error('Failed to reject request.');
       console.error('Error rejecting request:', error);
     }
-  };
+  }, [token]);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -102,7 +110,7 @@ const RequestApprovalTable = () => {
       <SideNav user={user} handleLogout={handleLogout} />
 
       <div className="table-responsive">
-        {message && <div className="alert alert-info">{message}</div>}
+        <ToastContainer /> {/* Toast container to display toasts */}
         <table className="table table-bordered table-striped mt-3 text-center">
           <thead>
             <tr>
@@ -151,7 +159,7 @@ const RequestApprovalTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center">No approved requests found</td>
+                <td colSpan="6" className="text-center">No pending requests found</td>
               </tr>
             )}
           </tbody>
