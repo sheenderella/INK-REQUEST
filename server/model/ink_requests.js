@@ -4,9 +4,7 @@ const inkRequestSchema = new mongoose.Schema(
   {
     ink: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Inventory' }],    
     requested_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-
     quantity_requested: { type: Number, required: true, default: 1 },
-
     ink_type: { type: String, enum: ['black', 'colored'], default: 'black' },
     supervisor_approval: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
     supervisor_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

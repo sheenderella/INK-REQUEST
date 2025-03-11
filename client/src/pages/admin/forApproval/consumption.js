@@ -18,41 +18,29 @@ const Consumption = () => {
   const [colorOptions, setColorOptions] = useState([]);
 
   useEffect(() => {
-    if (!selectedRequest) {
-      toast.error('No request data found.');
-      navigate('/admin/for-approval');
-      return;
-    }
-
-    if (selectedRequest.ink_type === 'colored') {
-      // Ensure we work with an array of inventory records.
+    if (selectedRequest?.ink_type === 'colored') {
       const inventoryRecords = Array.isArray(selectedRequest.ink)
         ? selectedRequest.ink
         : [selectedRequest.ink];
-
-      // Extract colors, filter out "black", and remove duplicates.
+  
       const filteredColors = [
-        ...new Set(
-          inventoryRecords
-            .map(record => record.color)
-            .filter(color => color && color.toLowerCase() !== 'black')
-        )
+        ...new Set(inventoryRecords.map(record => record.color).filter(color => color && color.toLowerCase() !== 'black'))
       ];
-
+  
       setColorOptions(filteredColors);
-      // Create a defaults object for consumptionStatus.
+  
       setConsumptionStatus(
         filteredColors.reduce((defaults, color) => {
-          defaults[color] = 'Used';
+          defaults[color] = 'Used'; // Set default value as 'Used' for all colors
           return defaults;
         }, {})
       );
     } else {
-      // For black ink, show a single field labeled "Black".
       setColorOptions(['Black']);
       setConsumptionStatus('Used');
     }
-  }, [selectedRequest, navigate]);
+  }, [selectedRequest]);
+  
 
   const handleConsumptionChange = (color, value) => {
     if (selectedRequest.ink_type === 'colored') {
@@ -61,26 +49,48 @@ const Consumption = () => {
       setConsumptionStatus(value);
     }
   };
-
+  
   const handleFulfill = async () => {
+    console.log('Sending request with data:', {
+      requestId: selectedRequest._id,
+      consumptionStatus,
+    });
+  
+    // Ensure consumptionStatus is in the correct format
+    if (selectedRequest.ink_type === 'colored' && typeof consumptionStatus !== 'object') {
+      console.error('Incorrect format for colored ink consumptionStatus');
+      return toast.error('Invalid consumption status format for colored ink.');
+    }
+  
+    if (selectedRequest.ink_type === 'black' && typeof consumptionStatus !== 'string') {
+      console.error('Incorrect format for black ink consumptionStatus');
+      return toast.error('Invalid consumption status format for black ink.');
+    }
+  
     try {
+      // Send the data to the backend for approval and marking as fulfilled
       await axios.post(
-        'http://localhost:8000/api/ink/admin/issuance',
+        'http://localhost:8000/api/ink/admin/issuance', // Ensure this API call updates the status correctly
         { requestId: selectedRequest._id, consumptionStatus },
         {
           headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` },
         }
       );
+  
+      // Update the status to "Fulfilled"
       toast.success('Request fulfilled successfully!');
+      
+      // Redirect to the previous page (requests table)
       setTimeout(() => {
         navigate('/for-approval');
       }, 1500);
     } catch (error) {
+      console.error('Error fulfilling request:', error.response ? error.response.data : error.message);
       toast.error('Failed to fulfill request.');
-      console.error(error);
     }
   };
-
+  
+  
   if (!selectedRequest) return <div>Loading...</div>;
 
   return (
@@ -103,11 +113,7 @@ const Consumption = () => {
                 <select
                   className="form-select custom-select mx-auto"
                   style={{ maxWidth: '300px' }}
-                  value={
-                    selectedRequest.ink_type === 'colored'
-                      ? consumptionStatus[color]
-                      : consumptionStatus
-                  }
+                  value={selectedRequest.ink_type === 'colored' ? consumptionStatus[color] : consumptionStatus}
                   onChange={e => handleConsumptionChange(color, e.target.value)}
                 >
                   <option value="Used">Used</option>

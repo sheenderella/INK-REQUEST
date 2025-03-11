@@ -1,4 +1,3 @@
-// InkOrderPage.js
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -10,80 +9,65 @@ const InkOrderPage = () => {
   const navigate = useNavigate();
   const { request } = useLocation().state || {};
   const token = sessionStorage.getItem('authToken');
-  
-  const [inkInUseRecords, setInkInUseRecords] = useState([]);
-  // orderInputs will store additional quantities from inventory per color.
-  // Example: { Black: { additional: 0 }, cyan: { additional: 1 }, ... }
+
+  const [inkRecords, setInkRecords] = useState([]);
   const [orderInputs, setOrderInputs] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  // Utility: filter records based on ink type.
+  const filterRecords = (records) => {
+    return request.ink_type.toLowerCase() === 'black'
+      ? records.filter((rec) => rec.color.toLowerCase() === 'black')
+      : records.filter((rec) => rec.color.toLowerCase() !== 'black');
+  };
 
   useEffect(() => {
     if (!request) {
-      toast.error("No request data found");
-      return navigate("/admin/for-approval");
+      toast.error('No request data found');
+      navigate('/for-approval');
+      return;
     }
-    
-    // Fetch InkInUse records for this request's ink (using a query param such as inkId)
     axios
-      .get(`http://localhost:8000/api/ink/inkinuse?inkId=${request.ink?._id}`, {
+      .get('http://localhost:8000/api/inkinuse', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        const records = response.data;
-        setInkInUseRecords(records);
-        
-        // If no InkInUse records exist, directly process the issuance
-        if (records.length === 0) {
-          // Directly call issuance endpoint with default consumptionStatus (for example, using "Used")
-          axios
-            .post(
-              'http://localhost:8000/api/ink/admin/issuance',
-              { requestId: request._id, consumptionStatus: "Used" },
-              { headers: { Authorization: `Bearer ${token}` } }
-            )
-            .then(() => {
-              toast.success("Request approved directly (no InkInUse records found)");
-              navigate("/admin/for-approval");
-            })
-            .catch((err) => {
-              toast.error("Error processing issuance");
-              console.error(err);
-            });
-        } else {
-          // Initialize order inputs based on the InkInUse records (using color as key)
-          const defaults = {};
-          records.forEach((record) => {
-            // For simplicity, we assume one record per color.
-            defaults[record.color] = { additional: 0 };
-          });
-          setOrderInputs(defaults);
-        }
+        const filtered = filterRecords(response.data);
+        setInkRecords(filtered);
+        // Set default additional value 0 for each color found.
+        const defaults = filtered.reduce((acc, rec) => {
+          acc[rec.color.toLowerCase()] = { additional: 0 };
+          return acc;
+        }, {});
+        setOrderInputs(defaults);
       })
-      .catch((err) => {
-        toast.error("Error fetching InkInUse records");
-        console.error(err);
-      });
-  }, [request, navigate, token]);
+      .catch(() => toast.error('Error fetching Ink In Use records'))
+      .finally(() => setLoading(false));
+  }, [request, token, navigate]);
 
   const handleOrderChange = (color, value) => {
     setOrderInputs((prev) => ({
       ...prev,
-      [color]: { additional: parseInt(value, 10) || 0 },
+      [color.toLowerCase()]: { additional: parseInt(value, 10) || 0 },
     }));
   };
 
   const handleConfirm = () => {
-    // Build the consumptionStatus object.
-    // This example assumes that for each color, the system will use 1 unit from the InkInUse record
-    // and add any additional units from Inventory.
-    const consumptionStatus = {};
-    Object.keys(orderInputs).forEach((color) => {
-      // We assume that if no additional quantity is needed, it's "Used"
-      // Otherwise, "Partially Used" indicates new InkInUse records will be created.
-      consumptionStatus[color] =
-        orderInputs[color].additional > 0
-          ? { used: 1, partiallyUsed: orderInputs[color].additional }
-          : "Used";
-    });
+    let consumptionStatus;
+    if (request.ink_type.toLowerCase() === 'black') {
+      // For black ink, use the first record's additional value.
+      const key = inkRecords[0]?.color.toLowerCase() || 'black';
+      const additional = orderInputs[key]?.additional || 0;
+      consumptionStatus = additional > 0 ? 'Partially Used' : 'Used';
+    } else {
+      // For colored ink, build an object mapping each color to its status.
+      consumptionStatus = inkRecords.reduce((acc, rec) => {
+        const key = rec.color.toLowerCase();
+        const additional = orderInputs[key]?.additional || 0;
+        acc[rec.color] = additional > 0 ? 'Partially Used' : 'Used';
+        return acc;
+      }, {});
+    }
 
     axios
       .post(
@@ -92,53 +76,74 @@ const InkOrderPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then(() => {
-        toast.success("Ink issuance processed successfully");
-        navigate("/admin/for-approval");
+        toast.success('Ink issuance processed successfully');
+        navigate('/for-approval');
       })
-      .catch((err) => {
-        toast.error("Error processing issuance");
-        console.error(err);
+      .catch((error) => {
+        const errorMsg =
+          error.response?.data?.error || 'Error processing issuance';
+        toast.error(errorMsg);
       });
   };
+
+  if (loading) {
+    return (
+      <div className="container mt-5">
+        <ToastContainer />
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-5">
       <ToastContainer />
-      <h2 className="mb-3">Ink Order Confirmation</h2>
-      {inkInUseRecords.length > 0 ? (
-        <div className="table-responsive">
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>Color</th>
-                <th>Quantity In Use</th>
-                <th>Additional from Inventory</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inkInUseRecords.map((record) => (
-                <tr key={record._id}>
-                  <td>{record.color}</td>
-                  <td>{record.quantity_used}</td>
-                  <td>
-                    <input
-                      type="number"
-                      min="0"
-                      value={orderInputs[record.color]?.additional || 0}
-                      onChange={(e) => handleOrderChange(record.color, e.target.value)}
-                    />
-                  </td>
+      <div className="custom-card p-4">
+        <h2 className="mb-3">Ink Request Confirmation</h2>
+        <p className="mb-4">Review and confirm your ink request details below.</p>
+        {inkRecords.length > 0 ? (
+          <div className="table-responsive">
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Color</th>
+                  <th>Ink In Use</th>
+                  <th>Additional (from Inventory)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <button className="btn btn-primary" onClick={handleConfirm}>
-            Confirm Order
-          </button>
-        </div>
-      ) : (
-        <p>Processing direct approval...</p>
-      )}
+              </thead>
+              <tbody>
+                {inkRecords.map((rec) => {
+                  const key = rec.color.toLowerCase();
+                  return (
+                    <tr key={rec._id}>
+                      <td>{rec.color}</td>
+                      <td>{rec.quantity_used}</td>
+                      <td>
+                        <input
+                          type="number"
+                          min="0"
+                          className="form-control"
+                          value={orderInputs[key]?.additional || 0}
+                          onChange={(e) =>
+                            handleOrderChange(rec.color, e.target.value)
+                          }
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="text-center mt-3">
+              <button className="btn btn-primary" onClick={handleConfirm}>
+                Confirm
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p>No matching ink records found.</p>
+        )}
+      </div>
     </div>
   );
 };

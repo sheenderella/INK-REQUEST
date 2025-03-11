@@ -35,7 +35,7 @@ const Login = () => {
         setUsername('');
         setPassword('');
 
-        toast.success("Login successful! Redirecting...", { position: 'top-right' });
+        toast.success("login successful!", { position: 'top-right' });
         
         setTimeout(() => {
           switch (response.data.role) {
@@ -108,9 +108,14 @@ const Login = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-secondary w-100" >
-            login
+          <button
+            type="submit"
+            className="btn btn-secondary w-100"
+            disabled={loading}
+          >
+            {loading ? 'logging in...' : 'login'}
           </button>
+
         </form>
       </div>
 

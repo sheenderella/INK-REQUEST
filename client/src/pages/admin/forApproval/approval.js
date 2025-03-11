@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -14,53 +14,138 @@ const RequestApprovalTable = () => {
   useEffect(() => {
     const token = sessionStorage.getItem('authToken');
     const userId = sessionStorage.getItem('userId');
-    if (!token || !userId) return navigate('/login');
+    if (!token || !userId) {
+      navigate('/login');
+      return;
+    }
+    
+    const headers = { Authorization: `Bearer ${token}` };
 
-    const fetchData = async () => {
-      try {
-        const { data: userData } = await axios.get(`http://localhost:8000/api/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setUser(userData);
-        const { data: reqs } = await axios.get('http://localhost:8000/api/ink/admin/requests', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setRequests(reqs);
-      } catch (error) {
+    // Fetch user data and requests concurrently
+    Promise.all([
+      axios.get(`http://localhost:8000/api/users/${userId}`, { headers }),
+      axios.get('http://localhost:8000/api/ink/admin/requests', { headers })
+    ])
+      .then(([userRes, requestsRes]) => {
+        setUser(userRes.data);
+        setRequests(requestsRes.data);
+      })
+      .catch(error => {
         toast.error('Error fetching data');
         console.error(error);
-      }
-    };
-    fetchData();
+      });
   }, [navigate]);
 
-  const handleAction = async (id, action) => {
+  const handleReject = useCallback(async (id) => {
+    const token = sessionStorage.getItem('authToken');
     try {
+      const headers = { Authorization: `Bearer ${token}` };
       const { data: updated } = await axios.post(
         'http://localhost:8000/api/ink/admin/approval',
-        { requestId: id, action },
-        { headers: { Authorization: `Bearer ${sessionStorage.getItem('authToken')}` } }
+        { requestId: id, action: 'Rejected' },
+        { headers }
       );
-      toast.success(`Request ${action === 'Approved' ? 'approved' : 'rejected'} successfully!`);
-      setRequests(
-        requests.map((r) =>
-          r._id === id ? { ...r, admin_approval: action, status: updated.status } : r
+      toast.success('Request rejected successfully!');
+      setRequests(prevRequests =>
+        prevRequests.map((r) =>
+          r._id === id ? { ...r, admin_approval: 'Rejected', status: updated.status } : r
         )
       );
     } catch (error) {
-      toast.error(`Failed to ${action === 'Approved' ? 'approve' : 'reject'} request.`);
+      toast.error('Failed to reject request.');
       console.error(error);
+    }
+  }, []);
+
+  const handleApprove = useCallback(async (req) => {
+    const token = sessionStorage.getItem('authToken');
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      // Fetch ink in use records
+      const response = await axios.get('http://localhost:8000/api/inkinuse', { headers });
+      const records = response.data;
+      const requestedColor = req.ink_type.toLowerCase();
+  
+      let filteredRecords = [];
+      if (requestedColor === 'colored') {
+        // Example: consider all inks that are not black as colored inks
+        filteredRecords = records.filter(record => record.color.toLowerCase() !== 'black');
+      } else {
+        filteredRecords = records.filter(record =>
+          record.color.toLowerCase() === requestedColor
+        );
+      }
+  
+      if (filteredRecords.length === 0) {
+        // No matching records found; auto approve directly
+        const { data: updated } = await axios.post(
+          'http://localhost:8000/api/ink/admin/approval',
+          { requestId: req._id, action: 'Approved' },
+          { headers }
+        );
+        toast.success('Request approved successfully!');
+        setRequests(prevRequests =>
+          prevRequests.map((r) =>
+            r._id === req._id ? { ...r, admin_approval: 'Approved', status: updated.status } : r
+          )
+        );
+      } else {
+        // Matching records exist; redirect for further confirmation
+        navigate('/ink-order', { state: { request: req } });
+      }
+    } catch (error) {
+      toast.error('Failed to approve request.');
+      console.error(error);
+    }
+  }, [navigate]);
+  
+  
+  const handleFulfillRedirect = useCallback((req) => {
+    console.log('Redirecting with request:', req);
+    navigate('/consumption', { state: { request: req } });
+  }, [navigate]);
+
+  const renderAdminApproval = (r) => {
+    switch (r.admin_approval) {
+      case 'Approved':
+        return <span className="badge bg-success">Approved</span>;
+      case 'Rejected':
+        return <span className="badge bg-danger">Rejected</span>;
+      case 'Pending':
+        return (
+          <>
+            <button className="btn btn-success me-1" onClick={() => handleApprove(r)}>
+              <FaCheck /> Approve
+            </button>
+            <button className="btn btn-danger" onClick={() => handleReject(r._id)}>
+              <FaTimes /> Reject
+            </button>
+          </>
+        );
+      default:
+        return null;
     }
   };
 
-  // Redirect to the consumption page along with the selected request
-  const handleFulfillRedirect = (req) => {
-    console.log('Redirecting with request:', req);
-    navigate('/consumption', { state: { request: req } });
+  const renderStatus = (r) => {
+    if (r.status === 'Fulfilled') {
+      return <span className="badge bg-primary">Fulfilled</span>;
+    }
+    if (r.admin_approval === 'Approved') {
+      return (
+        <button className="btn btn-info" onClick={() => handleFulfillRedirect(r)}>
+          Fulfill Request
+        </button>
+      );
+    }
+    if (r.status === 'Rejected') {
+      return <span className="badge bg-danger">Rejected</span>;
+    }
+    return r.status;
   };
-
+  
   return (
-    <div className="d-flex" style={{ height: "100vh", alignItems: "center" }}>
+    <div className="d-flex" style={{ height: '100vh', alignItems: 'center' }}>
       <SideNav user={user} />
       <div className="content">
         <h2 className="dashboard-title">Approve Requests</h2>
@@ -81,64 +166,18 @@ const RequestApprovalTable = () => {
               {requests.length > 0 ? (
                 requests.map((r) => (
                   <tr key={r._id}>
-                    <td>
-                      {r.requested_by
-                        ? `${r.requested_by.first_name} ${r.requested_by.last_name}`
-                        : 'N/A'}
-                    </td>
+                    <td>{r.requested_by ? `${r.requested_by.first_name} ${r.requested_by.last_name}` : 'N/A'}</td>
                     <td>{r.requested_by?.department || 'N/A'}</td>
-                    <td>
-                      {r.ink && r.ink.length > 0 && r.ink[0].ink_model
-                        ? r.ink[0].ink_model.ink_name
-                        : 'N/A'}
-                    </td>
+                    <td>{r.ink && r.ink[0]?.ink_model?.ink_name ? r.ink[0].ink_model.ink_name : 'N/A'}</td>
                     <td>{r.ink_type || 'N/A'}</td>
                     <td>{new Date(r.request_date).toLocaleDateString()}</td>
-                    <td>
-                      {r.admin_approval === 'Approved' && (
-                        <span className="badge bg-success">Approved</span>
-                      )}
-                      {r.admin_approval === 'Rejected' && (
-                        <span className="badge bg-danger">Rejected</span>
-                      )}
-                      {r.admin_approval === 'Pending' && (
-                        <>
-                          <button
-                            className="btn btn-success me-1"
-                            onClick={() => handleAction(r._id, 'Approved')}
-                          >
-                            <FaCheck /> Approve
-                          </button>
-                          <button
-                            className="btn btn-danger"
-                            onClick={() => handleAction(r._id, 'Rejected')}
-                          >
-                            <FaTimes /> Reject
-                          </button>
-                        </>
-                      )}
-                    </td>
-                    <td>
-                      {r.status === 'Fulfilled' ? (
-                        <span className="badge bg-primary">Fulfilled</span>
-                      ) : r.admin_approval === 'Approved' ? (
-                        <button
-                          className="btn btn-info"
-                          onClick={() => handleFulfillRedirect(r)}
-                        >
-                          Fulfill Request
-                        </button>
-                      ) : r.status === 'Rejected' ? (
-                        <span className="badge bg-danger">Rejected</span>
-                      ) : (
-                        r.status
-                      )}
-                    </td>
+                    <td>{renderAdminApproval(r)}</td>
+                    <td>{renderStatus(r)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td colSpan="7" className="text-center">
                     No approved requests found
                   </td>
                 </tr>

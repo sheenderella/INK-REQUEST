@@ -14,13 +14,14 @@ import requestRoutes from './routes/requestRoute.js';
 import inventoryRoutes from './routes/inventoryRoute.js';
 import printerRoutes from './routes/printerRoutes.js';
 import inkRoutes from './routes/inkModelRoutes.js';
+import inkInUseRoutes from './routes/inkInUseRoutes.js';
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api', userRoutes, authRoutes, printerRoutes, inkRoutes, inventoryRoutes, requestRoutes);
+app.use('/api', userRoutes, authRoutes, printerRoutes, inkRoutes, inventoryRoutes, requestRoutes,inkInUseRoutes);
 
 mongoose
   .connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
