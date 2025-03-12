@@ -9,7 +9,7 @@ const inkInUseSchema = new mongoose.Schema(
     department: { type: String, required: true, maxlength: 100 },
     quantity_used: { type: Number, required: true },
     color: { type: String, required: true, maxlength: 20 },
-    status: { type: String, enum: ['In Use', 'Transferred'], default: 'In Use' },
+    status: { type: String, enum: ['In Use', 'Finished'], default: 'In Use' },
     assigned_date: { type: Date, default: Date.now }
   },
   { timestamps: true }

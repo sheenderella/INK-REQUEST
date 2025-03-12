@@ -22,7 +22,7 @@ router.get('/ink/admin/requests', verifyToken, getPendingAdminRequests);
 router.get('/ink/requests/:userId', verifyToken, getUserRequests);
 
 
-router.post('/ink/admin/approval', verifyToken, adminApproval); 
-router.post('/ink/admin/issuance', verifyToken, adminIssuance); 
+router.post('/ink/admin/approval', verifyToken,adminApproval); 
+router.post('/ink/admin/issuance',   verifyToken,  adminIssuance); 
 
 export default router;
