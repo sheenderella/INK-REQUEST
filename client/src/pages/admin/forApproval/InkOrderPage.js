@@ -23,11 +23,11 @@ const InkOrderPage = () => {
     }
 
     axios
-      .get('http://localhost:8000/api/inkinuse', {
+      .get('http://localhost:8000/api/ink/inuse', { // Adjusted the endpoint to match the backend route
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        const filteredInkRecords = response.data; // All ink records fetched from the backend
+        const filteredInkRecords = response.data;
         setInkRecords(filteredInkRecords);
 
         // Initialize order inputs dynamically based on the fetched ink colors
@@ -95,14 +95,12 @@ const InkOrderPage = () => {
     );
   }
 
-  // Get requested colors (by ink type) and ensure all are displayed, even if no record exists
-  const requestedColors = request.ink.map((ink) => ink.color.toLowerCase()); // Get the requested colors
+  const requestedColors = request.ink.map((ink) => ink.color.toLowerCase());
   const filteredInkRecords = requestedColors.map((color) => {
-    const record = inkRecords.find((rec) => rec.color.toLowerCase() === color); // Find the ink record for the color
+    const record = inkRecords.find((rec) => rec.color.toLowerCase() === color);
     if (record) {
-      return record; // If it exists, return the record
+      return record;
     } else {
-      // If no record exists, return a default object for that color
       return { color, quantity_used: 0 };
     }
   });

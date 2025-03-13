@@ -118,7 +118,6 @@ export const submitInkRequest = async (req, res) => {
   }
 };
 
-
 export const getPendingSupervisorRequests = async (req, res) => {
   try {
     const supervisorDept = req.user.department;
@@ -174,30 +173,28 @@ export const supervisorApproval = async (req, res) => {
 
 export const getPendingAdminRequests = async (req, res) => {
   try {
+    // Fetch pending admin requests based on supervisor approval and status
     const pendingRequests = await InkRequest.find({
       supervisor_approval: 'Approved',
-      admin_approval: { $in: ['Approved', 'Pending'] }
+      status: { $nin: ['Fulfilled', 'Rejected'] }
     })
       .populate({
         path: 'ink',
         populate: {
           path: 'ink_model',
-          select: 'ink_name'
+          select: 'ink_name colors'
         }
       })
       .populate('requested_by', 'first_name last_name department')
       .exec();
 
     console.log('Populated Pending Requests:', pendingRequests);  // Check the data in the logs
-
     res.status(200).json(pendingRequests);
   } catch (error) {
     console.error('Error fetching admin requests:', error);
     res.status(500).json({ error: error.message });
   }
 };
-
-
 
 export const adminApproval = async (req, res) => {
   try {
@@ -236,15 +233,23 @@ export const adminApproval = async (req, res) => {
   }
 };
 
+export const getInkInUses = async (req, res) => {
+  try {
+    // Fetch all InkInUse records, populate related fields from Inventory and User collections
+    const inkInUses = await InkInUse.find()
+      .populate('ink', 'ink_name')         // Get the 'ink_name' field from the 'Inventory' collection
+      .populate('user', 'first_name last_name department')  // Get user details (first name, last name, department)
+      .exec(); // Execute the query and get the results
 
-const fetchRequest = async (requestId) => {
-  console.log(`Fetching request with ID: ${requestId}`);
-  return await InkRequest.findById(requestId)
-    .populate({
-      path: 'ink',
-      populate: { path: 'ink_model', select: 'ink_name colors' }
-    })
-    .populate('requested_by', 'department');
+    console.log('Fetched Ink In Use records:', inkInUses);
+
+    // Send the populated data as JSON response
+    res.status(200).json(inkInUses);
+  } catch (error) {
+    // If there's an error, log it and send back a 500 status with the error message
+    console.error('Error fetching Ink In Use records:', error);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 const determineInventoryRecord = async (request) => {
@@ -269,6 +274,7 @@ const determineInventoryRecord = async (request) => {
   console.log(`Found inventory record with ID: ${inventoryRecord._id}, Ink model: ${inkModel}`);
   return { inventoryRecord, inkModel };
 };
+
 
 const markRequestApproved = async (request) => {
   console.log('Marking request as approved if not already.');
@@ -306,6 +312,7 @@ const validateConsumptionStatus = (request, consumptionStatus) => {
   }
   return true;
 };
+
 
 
 const handleBlackInk = async (request, inkModel, consumptionStatus, adminId) => {
@@ -412,6 +419,7 @@ if (blackInkInUse && blackInkInUse.quantity_used > 0) {
 };
 
 
+
 const handleColoredInk = async (request, inkModel, consumptionStatus, adminId) => {
   console.log(`Handling colored ink for request: ${request._id}`);
   const colorOptions = inkModel.colors.filter(color => color.toLowerCase() !== 'black');
@@ -501,30 +509,35 @@ const handleColoredInk = async (request, inkModel, consumptionStatus, adminId) =
 };
 
 
+
 export const adminIssuance = async (req, res) => {
   try {
     console.log('Admin issuance started.');
     const { requestId, consumptionStatus } = req.body;
     const adminId = req.user.userId || req.user.id;
 
-    // Fetch the ink request and populate related fields.
-    const request = await fetchRequest(requestId);
+    // Fetch the ink request using getPendingAdminRequests
+    const request = await InkRequest.findById(requestId)
+      .populate({
+        path: 'ink',
+        populate: { path: 'ink_model', select: 'ink_name colors' }
+      })
+      .populate('requested_by', 'department');
+
     if (!request) {
       console.log('Request not found.');
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    // Determine inventory record and ink model.
+    // Logic continues as before...
     let { inventoryRecord, inkModel } = await determineInventoryRecord(request);
     if (!inventoryRecord || !inkModel) {
       console.log('Inventory record or ink model not assigned.');
       return res.status(400).json({ error: 'Inventory record or ink model not assigned.' });
     }
 
-    // Mark request as approved if not already.
     await markRequestApproved(request);
 
-    // Check for existing consumption status.
     if (await handleExistingConsumptionStatus(request)) {
       return res.status(200).json({
         request,
@@ -532,25 +545,23 @@ export const adminIssuance = async (req, res) => {
       });
     }
 
-    // Validate consumptionStatus format.
     if (!validateConsumptionStatus(request, consumptionStatus)) {
       console.log('Invalid consumption status format.');
       return res.status(400).json({ error: 'Invalid consumption status format.' });
     }
 
-    // ===== BLACK INK HANDLING =====
+    // Handle black or colored ink
     if (request.ink_type.toLowerCase() === 'black') {
       const response = await handleBlackInk(request, inkModel, consumptionStatus, adminId);
       return res.status(200).json(response);
-    }
-
-    // ===== COLORED INK HANDLING =====
-    if (request.ink_type.toLowerCase() === 'colored') {
+    } else if (request.ink_type.toLowerCase() === 'colored') {
       const response = await handleColoredInk(request, inkModel, consumptionStatus, adminId);
       return res.status(200).json(response);
     }
+
   } catch (error) {
     console.error('Error in adminIssuance:', error);
     return res.status(500).json({ error: error.message });
   }
 };
+
