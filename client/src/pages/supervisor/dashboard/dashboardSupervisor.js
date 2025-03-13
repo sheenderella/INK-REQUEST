@@ -60,15 +60,16 @@ const DashboardSupervisor = () => {
       <SideNav user={user} handleLogout={handleLogout} />
 
       <div className="content" style={{ height: "50vh" }}>
-        <h2 className="dashboard-title">SUPERVISOR DASHBOARD</h2>
+        <h2 className="dashboard-title">dashboard </h2>
 
-        <div className="d-flex gap-4 mt-4">
-          <button
-            className="request mt-2 rounded flex flex-col items-center justify-center gap-1"
+        <div className="d-flex gap-4 mt-4 align-items-center">
+        <button
+            className="btn btn-dark d-flex flex-column align-items-center justify-content-center p-4"
+            style={{ height: '150px', width: '150px', borderRadius: '15px' }}
             onClick={() => setShowModal(true)}
           >
-            <i className="fas fa-plus text-lg"></i>
-            <span>Request Ink</span>
+            <i className="fas fa-plus text-white" style={{ fontSize: '36px' }}></i> {/* Increased font size */}
+            <span className="text-white mt-2">request ink</span>
           </button>
         </div>
       </div>

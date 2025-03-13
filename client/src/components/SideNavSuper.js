@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   FaSignOutAlt, 
@@ -8,11 +8,13 @@ import {
   FaKey 
 } from "react-icons/fa";
 import axios from "axios";
+import ChangePassword from "./ChangePassword"; 
 import "./SideNav.css";
 
 const SideNavSuper = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showPasswordModal, setShowPasswordModal] = useState(false); // State to control modal visibility
 
   const handleLogout = async () => {
     const token = sessionStorage.getItem("authToken");
@@ -34,18 +36,23 @@ const SideNavSuper = ({ user }) => {
     { path: "/dashboardSupervisor", label: "dashboard", icon: <FaTachometerAlt /> },
     { path: "/TrackSupervisor", label: "track my request", icon: <FaSearch /> },
     { path: "/ApprovalSupervisor", label: "approve requests", icon: <FaCheck /> },
-    { path: "/change-password", label: "change password", icon: <FaKey /> },
+    { 
+      path: "#", 
+      label: "change password", 
+      icon: <FaKey />, 
+      onClick: () => setShowPasswordModal(true) // Show modal when clicked
+    },
   ];
 
   return (
     <div className="sidebar text-white d-flex flex-column">
       <h2 className="fw-light">ink request</h2>
       <nav className="nav flex-column">
-        {navLinks.map(({ path, label, icon }) => (
+        {navLinks.map(({ path, label, icon, onClick }) => (
           <button
             key={path}
             className={`nav-link ${location.pathname === path ? "active" : ""}`}
-            onClick={() => navigate(path)}
+            onClick={onClick || (() => navigate(path))} 
           >
             {icon} <span className="ms-2">{label}</span>
           </button>
@@ -71,6 +78,21 @@ const SideNavSuper = ({ user }) => {
           <FaSignOutAlt className="me-2" /> Logout
         </button>
       </div>
+
+      {/* Show Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="close-btn" onClick={() => setShowPasswordModal(false)}>
+              &times;
+            </button>
+            <ChangePassword 
+              showModal={showPasswordModal} 
+              handleClose={() => setShowPasswordModal(false)} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

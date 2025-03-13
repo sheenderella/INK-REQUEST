@@ -298,7 +298,6 @@ const handleExistingConsumptionStatus = async (request) => {
 };
 
 
-
 const validateConsumptionStatus = (request, consumptionStatus) => {
   console.log('Validating consumption status format.');
   if (request.ink_type === 'black' && typeof consumptionStatus !== 'string') {

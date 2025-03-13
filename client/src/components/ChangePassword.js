@@ -100,17 +100,16 @@ const ChangePassword = () => {
   };
 
   return (
-    <div
-      className="d-flex align-items-center justify-content-center min-vh-100"
-    >
+    <div className="custom-card p-4">
       <ToastContainer />
-      <div className="card p-4 shadow-lg bg-dark text-white text-start" style={{ width: "500px", borderRadius: "15px" }}>
-        <h2 className="text-center mb-4">change password</h2>
+      <div className="text-center">
+      <h2 className="mb-3 custom-title">change password</h2>
 
         <form onSubmit={handleSubmit}>
           {/* Old Password */}
-          <div className="mb-3">
-            <label className="form-label text-white">old password:</label>
+          <div className="custom-form-group mb-3">
+
+            <label className="form-label field-label"> old password:</label>
             <div className="input-group">
               <input
                 type={showPassword.oldPassword ? "text" : "password"}
@@ -122,7 +121,8 @@ const ChangePassword = () => {
               />
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-dark"
+
                 onClick={() => togglePasswordVisibility("oldPassword")}
               >
                 <i className={showPassword.oldPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
@@ -131,8 +131,8 @@ const ChangePassword = () => {
           </div>
 
           {/* New Password */}
-          <div className="mb-3">
-            <label className="form-label text-white">new password:</label>
+          <div className="custom-form-group mb-3">
+            <label className="form-label field-label"> new password:</label>
             <div className="input-group">
               <input
                 type={showPassword.newPassword ? "text" : "password"}
@@ -144,7 +144,8 @@ const ChangePassword = () => {
               />
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-dark"
+
                 onClick={() => togglePasswordVisibility("newPassword")}
               >
                 <i className={showPassword.newPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
@@ -154,8 +155,8 @@ const ChangePassword = () => {
           </div>
 
           {/* Confirm New Password */}
-          <div className="mb-3">
-            <label className="form-label text-white text-start">confirm new password:</label>
+          <div className="custom-form-group mb-3">
+          <label className="form-label field-label"> confirm new password:</label>
             <div className="input-group">
               <input
                 type={showPassword.confirmNewPassword ? "text" : "password"}
@@ -167,7 +168,7 @@ const ChangePassword = () => {
               />
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-dark"
                 onClick={() => togglePasswordVisibility("confirmNewPassword")}
               >
                 <i className={showPassword.confirmNewPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
@@ -176,9 +177,12 @@ const ChangePassword = () => {
           </div>
 
           {/* Submit Button */}
-          <button type="submit" className="btn btn-secondary w-100" disabled={loading}>
-            {loading ? <i className="fas fa-spinner fa-spin"></i> : "update password"}
-          </button>
+          <div className="text-center">
+             <button type="submit" className="btn btn-primary mt-3 custom-button"
+            disabled={loading}>
+              {loading ? <i className="fas fa-spinner fa-spin"></i> : "update password"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaSignOutAlt, FaBoxOpen, FaUsers, FaCheck, FaTachometerAlt, FaKey } from "react-icons/fa";
 import axios from "axios";
 import "./SideNav.css";
+import ChangePassword from "../components/ChangePassword"; // Ensure this is imported
 
 const SideNav = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const handleLogout = async () => {
     const token = sessionStorage.getItem("authToken");
@@ -20,11 +22,11 @@ const SideNav = ({ user }) => {
       console.error("Error during logout:", error);
     }
     sessionStorage.clear();
-    navigate("/");
+    navigate("/");  // Redirect to home page after logout
   };
 
   return (
-    <div className="sidebar  text-white d-flex flex-column">
+    <div className="sidebar text-white d-flex flex-column">
       <h2 className="fw-light">ink request</h2>
 
       <nav className="nav flex-column">
@@ -33,9 +35,6 @@ const SideNav = ({ user }) => {
           { path: "/inventory", label: "inventory", icon: <FaBoxOpen /> },
           { path: "/for-approval", label: "ink requests", icon: <FaCheck /> },
           { path: "/account-management", label: "user management", icon: <FaUsers /> },
-          { path: "/change-password", label: "change password", icon: <FaKey /> }
-
-
         ].map(({ path, label, icon }) => (
           <button
             key={path}
@@ -45,6 +44,14 @@ const SideNav = ({ user }) => {
             {icon} <span className="ms-2">{label}</span>
           </button>
         ))}
+
+        {/* Change Password button */}
+        <button
+          className={`nav-link ${location.pathname === "#" ? "active" : ""}`}
+          onClick={() => setShowPasswordModal(true)}
+        >
+          <FaKey /> <span className="ms-2">change password</span>
+        </button>
       </nav>
 
       {/* Grouped container for user info and logout */}
@@ -66,6 +73,21 @@ const SideNav = ({ user }) => {
           <FaSignOutAlt className="me-2" /> Logout
         </button>
       </div>
+
+      {/* Show Change Password Modal */}
+      {showPasswordModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button className="close-btn" onClick={() => setShowPasswordModal(false)}>
+              &times;
+            </button>
+            <ChangePassword 
+              showModal={showPasswordModal} 
+              handleClose={() => setShowPasswordModal(false)} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

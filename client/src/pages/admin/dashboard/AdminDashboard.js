@@ -59,21 +59,24 @@ const AdminDashboard = () => {
       <div className="content" style={{ height: "50vh" }}>
         <h2 className="dashboard-title"> dashboard </h2>
 
-        <div className="d-flex gap-4 mt-4">
-          <div className="card bg-black text-white text-center p-4 rounded">
+        <div className="d-flex gap-4 mt-4 align-items-center">
+          <div className="card bg-black text-white text-center p-4 d-flex align-items-center justify-content-center" style={{ height: '150px', width: '150px', borderRadius: '15px' }}>
             <h3 className="fw-light">{pendingRequests}</h3>
             <p className="fs-6">pending requests</p>
           </div>
 
           <button
-            className="request mt-2 rounded flex flex-col items-center justify-center gap-1"
+            className="btn btn-dark d-flex flex-column align-items-center justify-content-center p-4"
+            style={{ height: '150px', width: '150px', borderRadius: '15px' }}
             onClick={() => setShowModal(true)}
           >
-            <i className="fas fa-plus text-lg"></i>
-            <span>request ink</span>
+            <i className="fas fa-plus text-white" style={{ fontSize: '36px' }}></i> {/* Increased font size */}
+            <span className="text-white mt-2">request ink</span>
           </button>
-          
         </div>
+
+
+
       </div>
 
       {showModal && token && userId && (
