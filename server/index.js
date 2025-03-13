@@ -5,7 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import detect from 'detect-port';
-import kill from 'kill-port'; // new import
+import kill from 'kill-port';
 import { createDefaultAdmin } from './controller/adminSetup.js';
 
 import userRoutes from './routes/userRoute.js';
@@ -37,16 +37,13 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 (async () => {
   const defaultPort = Number(process.env.PORT) || 8000;
   
-  // Kill any process running on the desired port
   try {
     await kill(defaultPort);
     console.log(`Killed any process running on port ${defaultPort}`);
   } catch (err) {
-    // If nothing is using the port, kill-port may throw an error; this can be safely ignored
     console.error(`Error while trying to kill process on port ${defaultPort}:`, err);
   }
   
-  // Ensure that the port is available
   const port = await detect(defaultPort);
   if (port !== defaultPort) {
     console.log(`Port ${defaultPort} in use. Using port ${port} instead.`);

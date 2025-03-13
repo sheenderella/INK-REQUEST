@@ -14,7 +14,6 @@ const inkRequestSchema = new mongoose.Schema(
     admin_date: { type: Date },
     status: { type: String, enum: ['Pending', 'Approved', 'Rejected', 'Fulfilled'], default: 'Pending' },
     request_date: { type: Date, default: Date.now },
-    // Allow consumption_status to be either a string or an object
     consumption_status: { type: mongoose.Schema.Types.Mixed, default: 'Not Processed' }
 
   },

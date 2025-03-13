@@ -16,7 +16,7 @@ import Inventory from "./pages/admin/inventory/inventory";
 import AccountManagement from "./pages/admin/accounts/AccountManagement";
 import ForApproval from "./pages/admin/forApproval/approval";
 import Consumption from "./pages/admin/forApproval/consumption";
-import InkOrderPage from "./pages/admin/forApproval/InkOrderPage"; // New InkOrderPage
+import InkOrderPage from "./pages/admin/forApproval/InkOrderPage";
 import PrinterModel from "./pages/admin/inventory/PrinterModel";
 import InkModel from "./pages/admin/inventory/InkModel";
 

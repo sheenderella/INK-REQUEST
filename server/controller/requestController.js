@@ -26,8 +26,8 @@ export const getUserRequests = async (req, res) => {
 export const submitInkRequest = async (req, res) => {
   try {
     const { printerId, ink_type, userId } = req.body;
-    const userIdFromToken = req.user?.userId || req.user?.id; // Ensure ID is fetched correctly
-    const userRole = req.user?.role?.toLowerCase(); // Make role case-insensitive
+    const userIdFromToken = req.user?.userId || req.user?.id;
+    const userRole = req.user?.role?.toLowerCase(); 
 
     console.log("Received Printer ID:", printerId);
     console.log("Received Ink Type:", ink_type);
@@ -212,14 +212,11 @@ export const adminApproval = async (req, res) => {
       return res.status(404).json({ error: 'Request not found' });
     }
 
-    console.log('Request details:', request);  // Log the request details for debugging
-
-    // Ensure the action is either 'Approved' or 'Rejected'
+    console.log('Request details:', request);  
     if (action !== 'Approved' && action !== 'Rejected') {
       return res.status(400).json({ error: 'Invalid action' });
     }
 
-    // Process the approval or rejection based on the action
     if (action === 'Approved') {
       request.admin_approval = 'Approved';
       request.status = 'Approved';
@@ -234,7 +231,7 @@ export const adminApproval = async (req, res) => {
 
     return res.status(200).json(request);
   } catch (error) {
-    console.error('Error in adminApproval:', error);  // Log the error details
+    console.error('Error in adminApproval:', error); 
     return res.status(500).json({ error: error.message });
   }
 };

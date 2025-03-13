@@ -23,7 +23,7 @@ export const loginUser = async (req, res) => {
     let token;
     try {
       token = jwt.sign(
-        { userId: user._id, username: user.username, role: user.role, department: user.department }, // Add department to the payload
+        { userId: user._id, username: user.username, role: user.role, department: user.department }, 
         process.env.JWT_SECRET, 
         { expiresIn: '1h' } 
       );

@@ -81,7 +81,6 @@ export const deleteInkModel = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ✅ Validate ID format to prevent crashes
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid Ink Model ID' });
     }

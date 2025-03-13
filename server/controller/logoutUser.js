@@ -8,13 +8,13 @@ export const logoutUser = (req, res) => {
     }
 
     const token = authHeader.split(' ')[1];
-    console.log('Token to blacklist:', token); // Debugging output
+    console.log('Token to blacklist:', token);
 
     addTokenToBlacklist(token);
     
     return res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
-    console.error('Logout Error:', error); // Logs the error
+    console.error('Logout Error:', error);
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
