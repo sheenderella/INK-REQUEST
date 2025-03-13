@@ -17,35 +17,45 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Check if username and password are entered
     if (!username.trim() || !password.trim()) {
       toast.error("Username and password are required.", { position: 'top-right' });
       return;
     }
-
+  
     setLoading(true);
-
+    console.log('Attempting to log in with:', { username, password });
+  
     try {
       const response = await axios.post('http://localhost:8000/api/login', { username, password });
-
+      
+      // Log the response
+      console.log('Login response:', response);
+  
       if (response.data.token) {
         sessionStorage.setItem('authToken', response.data.token);
         sessionStorage.setItem('userId', response.data.userId);
         sessionStorage.setItem('role', response.data.role);
-
+  
         setUsername('');
         setPassword('');
-
-        toast.success("login successful!", { position: 'top-right' });
-        
+  
+        toast.success("Login successful!", { position: 'top-right' });
+  
+        console.log('Login successful, redirecting...');
+  
         setTimeout(() => {
           switch (response.data.role) {
             case 'admin':
+              console.log('Redirecting to admin dashboard');
               navigate('/admin');
               break;
             case 'supervisor':
+              console.log('Redirecting to supervisor dashboard');
               navigate('/dashboardSupervisor');
               break;
             case 'employee':
+              console.log('Redirecting to employee dashboard');
               navigate('/dashboard-user');
               break;
             default:
@@ -53,6 +63,8 @@ const Login = () => {
               navigate('/');
           }
         }, 1500);
+      } else {
+        console.log('No token received from the server.');
       }
     } catch (error) {
       console.error('Login Error:', error);
@@ -61,6 +73,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div
